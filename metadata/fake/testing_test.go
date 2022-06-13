@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsTest(t *testing.T) {
-	if ok := fakemetadata.IsTest(); !ok {
+	if ok := fakemetadata.OnTest(); !ok {
 		t.Fatal("expected true")
 	}
 }

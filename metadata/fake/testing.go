@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// IsTest reports whether the current state is in test.
-func IsTest() bool {
+// OnTest reports whether the current state is on the test.
+func OnTest() bool {
 	return strings.HasSuffix(os.Args[0], "test")
 }
