@@ -4,15 +4,15 @@
 //go:build !purego
 // +build !purego
 
+// Package metadata holds the "cloud.google.com/go/compute/metadata@v1.6.1" functions and types aliases.
+//
+// Follow are original package documentation:
+//
 // Package metadata provides access to Google Compute Engine (GCE)
 // metadata and API service accounts.
 //
 // This package is a wrapper around the GCE metadata service,
 // as documented at https://cloud.google.com/compute/docs/metadata/overview.
-//
-// This package holds "cloud.google.com/go/compute/metadata@v1.6.1" function and type aliases.
-//
-// TODO(zchee): auto generate.
 package metadata
 
 import (
@@ -21,6 +21,8 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 )
+
+// TODO(zchee): auto generate.
 
 // A Client provides metadata.
 type Client = metadata.Client

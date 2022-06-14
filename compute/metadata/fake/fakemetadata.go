@@ -14,9 +14,7 @@ import (
 //
 // Those are exported and don't use constant types so can be replaced.
 //
-// The metadata components details:
-//
-//	https://cloud.google.com/compute/docs/metadata/overview#parts-of-a-request
+// See details: https://cloud.google.com/compute/docs/metadata/overview#parts-of-a-request
 var (
 	// metadataIP is the documented metadata server IP address.
 	MetadataIP = "169.254.169.254"
@@ -24,7 +22,10 @@ var (
 	// MetadataHostEnv is the environment variable specifying the GCE metadata hostname.
 	// If empty, the default value of metadataIP ("169.254.169.254") is used instead.
 	//
-	// This is variable name is not defined by any spec, as far as I know; it was made up for the Go package.
+	// The cloud.google.com/go/compute/metadata package maintainer said:
+	// > This is variable name is not defined by any spec, as far as I know; it was made up for the Go package.
+	//
+	// So this environment variable is helpful to replace the server that the cloud.google.com/go/compute/metadata package accesses during testing.
 	MetadataHostEnv = "GCE_METADATA_HOST"
 
 	// RootURL is the documented metadata server Host.
@@ -42,9 +43,7 @@ var rootURL = &url.URL{
 
 // List of request http header constants.
 //
-// See also:
-//
-//	https://cloud.google.com/compute/docs/metadata/overview
+// See also: https://cloud.google.com/compute/docs/metadata/overview
 const (
 	// RequestHeader is the required http header for access to the metadata server.
 	//
@@ -57,12 +56,10 @@ const (
 	LegacyRequestHeader = "X-Google-Metadata-Request: True"
 )
 
-// queryReplacer replaces string pairs for not supported in a request path to the metadata server.
+// QueryReplacer replaces string pairs for not supported in a request path to the metadata server.
 //
-// See details:
-//
-//	https://cloud.google.com/compute/docs/metadata/overview#limitations
-var queryReplacer = strings.NewReplacer(
+// See details: https://cloud.google.com/compute/docs/metadata/overview#limitations
+var QueryReplacer = strings.NewReplacer(
 	"%21", "!",
 	"%24", "$",
 	"%27", "'",

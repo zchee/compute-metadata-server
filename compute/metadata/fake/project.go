@@ -13,14 +13,14 @@ import (
 //
 //	http://metadata.google.internal/computeMetadata/v1/project/
 //
-// See:
-// https://cloud.google.com/compute/docs/metadata/default-metadata-values#project_metadata
+// See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#project_metadata
 type ProjectHandler struct{}
 
 // ProjectAttributeMap map of porject attributes.
 //
 // The project attributes are stored under the following directory:
-// http://metadata.google.internal/computeMetadata/v1/project/attributes/
+//
+//	http://metadata.google.internal/computeMetadata/v1/project/attributes/
 var ProjectAttributeMap = map[string]bool{
 	// Disables legacy metadata server endpoints for all VMs in your project.
 	//
@@ -85,9 +85,9 @@ var ProjectAttributeMap = map[string]bool{
 // For more information about setting custom metadata, see Setting VM metadata.
 func (h *ProjectHandler) Attributes(w http.ResponseWriter, r *http.Request) {}
 
-// NumericProjectID the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
+// NumericProjectID is the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
 // This value is different from the project-id metadata entry value.
 func (h *ProjectHandler) NumericProjectID(w http.ResponseWriter, r *http.Request) {}
 
-// ProjectID the project ID.
+// ProjectID is the project ID.
 func (h *ProjectHandler) ProjectID(w http.ResponseWriter, r *http.Request) {}
