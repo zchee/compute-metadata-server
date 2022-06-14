@@ -10,8 +10,6 @@ import (
 	"net/http"
 	_ "unsafe" // for go:linkname
 
-	_ "cloud.google.com/go/compute/metadata" // for go:linkname
-
 	_ "cloud.google.com/go/iam/credentials/apiv1"
 	_ "golang.org/x/net/http2"
 	_ "golang.org/x/oauth2"
