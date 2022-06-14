@@ -1,4 +1,4 @@
-module github.com/zchee/gce-metadata-server/metadata/fake
+module github.com/zchee/gce-metadata-server/compute/metadata/fake
 
 go 1.18
 
