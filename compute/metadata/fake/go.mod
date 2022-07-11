@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	cloud.google.com/go/iam v0.3.0
-	github.com/zchee/gce-metadata-server v0.0.0-20220612121039-8d07a83b2cf2
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
 	google.golang.org/api v0.83.0
@@ -17,6 +16,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
+	github.com/zchee/gce-metadata-server v0.0.0-20220614120728-0750052a9ff2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
