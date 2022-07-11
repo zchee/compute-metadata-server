@@ -192,8 +192,8 @@ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-github.com/zchee/gce-metadata-server v0.0.0-20220612121039-8d07a83b2cf2 h1:81Lc7wFZBH22oYVNcE3QwzJBybf2qwXkNPh3XcjY8RY=
-github.com/zchee/gce-metadata-server v0.0.0-20220612121039-8d07a83b2cf2/go.mod h1:enju0X9A1heVrldvICoyx1Y/EKGUnUf1PdeTf//kpco=
+github.com/zchee/gce-metadata-server/compute v0.0.0-20220614120728-0750052a9ff2 h1:gMhJ2K1crVuKYaa47Sq7KN/eSWIn9lVCLniKjmGJ0CI=
+github.com/zchee/gce-metadata-server/compute v0.0.0-20220614120728-0750052a9ff2/go.mod h1:B4qY0yokGtvvB4IUjdE/S5YPlf9gtz9rYYQF87TODq8=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=

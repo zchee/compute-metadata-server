@@ -18,7 +18,7 @@ import (
 	_ "google.golang.org/api/impersonate"
 	_ "google.golang.org/genproto/googleapis/iam/credentials/v1"
 
-	"github.com/zchee/gce-metadata-server/metadata"
+	"github.com/zchee/gce-metadata-server/compute/metadata"
 )
 
 // A Client provides metadata.
