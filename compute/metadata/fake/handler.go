@@ -4,41 +4,18 @@
 package fakemetadata
 
 import (
-	"fmt"
-	"net/http"
-	"strings"
+	"github.com/google/go-safeweb/safehttp"
 )
 
-const (
-	rootPattern = "/computeMetadata/v1"
-)
+type rootResponse struct{}
 
-const (
-	hdrContentType = "Content-Type"
-	mimeTextHTML   = "text/html; charset=UTF-8"
-)
+var _ safehttp.ErrorResponse = rootResponse{}
 
-const (
-	MetadataFlavorHeader = "Metadata-Flavor"
-	MetadataFlavorValue  = "Google"
-)
-
-func checkHeader(h http.Header) error {
-	metadataFlavor := h.Get(MetadataFlavorHeader)
-	if !strings.EqualFold(metadataFlavor, MetadataFlavorValue) {
-		return fmt.Errorf("%s header is wrong: %s", MetadataFlavorHeader, metadataFlavor)
-	}
-
-	return nil
+// Code implements safehttp.ErrorResponse.Code.
+func (rootResponse) Code() safehttp.StatusCode {
+	return safehttp.StatusOK
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if err := checkHeader(r.Header); err != nil {
-		w.Header().Set(hdrContentType, mimeTextHTML)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "ok")
+func rootHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
+	return w.WriteError(rootResponse{})
 }
