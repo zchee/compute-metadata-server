@@ -6,18 +6,22 @@ package fakemetadata
 import (
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/go-safeweb/safehttp/plugins/staticheaders"
+	"golang.org/x/net/http2"
 )
 
 var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
 
-// RandomPort generates random port number and checks whether the it available (unused) port.
-func RandomPort(network string) string {
+// randomPort generates random port number and checks whether the it available (unused) port.
+func randomPort(network string) string {
 	var p string
 	rnd := rand.New(portRandSrc)
 	for {
@@ -32,16 +36,14 @@ func RandomPort(network string) string {
 	}
 }
 
+// Server represents a fake metadata server.
 type Server struct {
 	*safehttp.Server
-
-	port string
 }
 
 // NewServer returns the new fake metadata server.
 func NewServer() *Server {
-	port := RandomPort("tcp4")
-	addr := net.JoinHostPort("localhost", port)
+	addr := net.JoinHostPort("localhost", randomPort("tcp4"))
 
 	// inject MetadataHostEnv hostname
 	os.Setenv(MetadataHostEnv, addr)
@@ -59,6 +61,63 @@ func NewServer() *Server {
 			Addr: addr,
 			Mux:  mux,
 		},
-		port: port,
 	}
 }
+
+//go:linkname buildStd github.com/google/go-safeweb/safehttp.(*Server).buildStd
+//go:noescape
+func buildStd(s *safehttp.Server) error
+
+func configureHTTP2Server(s *safehttp.Server, conf *http2.Server) *safehttp.Server {
+	v := reflect.ValueOf(s).Elem()
+	srv := v.FieldByName("srv")
+	addr := unsafe.Pointer(srv.UnsafeAddr())
+	(*http.Server)(addr).TLSConfig = s.TLSConfig
+
+	http2.ConfigureServer((*http.Server)(addr), conf)
+
+	return s
+}
+
+// ListenAndServe is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServe
+func (s *Server) ListenAndServe() error {
+	if err := buildStd(s.Server); err != nil {
+		return err
+	}
+	configureHTTP2Server(s.Server, &http2.Server{})
+
+	return s.Server.ListenAndServe()
+}
+
+// ListenAndServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServeTLS
+func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
+	if err := buildStd(s.Server); err != nil {
+		return err
+	}
+	configureHTTP2Server(s.Server, &http2.Server{})
+
+	return s.Server.ListenAndServeTLS(certFile, keyFile)
+}
+
+// Serve is a wrapper for https://golang.org/pkg/net/http/#Server.Serve
+func (s *Server) Serve(l net.Listener) error {
+	if err := buildStd(s.Server); err != nil {
+		return err
+	}
+	configureHTTP2Server(s.Server, &http2.Server{})
+
+	return s.Server.Serve(l)
+}
+
+// ServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ServeTLS
+func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
+	if err := buildStd(s.Server); err != nil {
+		return err
+	}
+	configureHTTP2Server(s.Server, &http2.Server{})
+
+	return s.Server.ServeTLS(l, certFile, keyFile)
+}
+
+// Addr returns the fake metadata server addr.
+func (s *Server) Addr() string { return s.Server.Addr }
