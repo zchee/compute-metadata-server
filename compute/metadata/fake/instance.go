@@ -72,11 +72,11 @@ func (h *InstanceHandler) Description(w http.ResponseWriter, r *http.Request) {}
 //
 // For each disk, the following information is available:
 //
-// device-name
-// index
-// interface
-// mode
-// type
+//  device-name
+//  index
+//  interface
+//  mode
+//  type
 //
 // For more information about disks, see Storage options.
 func (h *InstanceHandler) Disks(w http.ResponseWriter, r *http.Request) {} // directory
