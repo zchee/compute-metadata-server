@@ -6,7 +6,6 @@ package fakemetadata
 import (
 	"os"
 
-	"net/http"
 	_ "unsafe" // for go:linkname
 
 	_ "cloud.google.com/go/iam/credentials/apiv1"
@@ -19,20 +18,6 @@ import (
 
 	"github.com/zchee/gce-metadata-server/compute/metadata"
 )
-
-// A Client provides metadata.
-type Client = metadata.Client
-
-// Error contains an error response from the server.
-type Error = metadata.Error
-
-// NotDefinedError is returned when requested metadata is not defined.
-//
-// The underlying string is the suffix after "/computeMetadata/v1/".
-//
-// This error is not returned if the value is defined to be the empty
-// string.
-type NotDefinedError = metadata.NotDefinedError
 
 // Email calls Client.Email on the default client.
 //
@@ -128,10 +113,3 @@ func Subscribe(suffix string, fn func(v string, ok bool) error) error
 //
 //go:linkname Zone cloud.google.com/go/compute/metadata.Zone
 func Zone() (string, error)
-
-// NewClient returns a Client that can be used to fetch metadata. Returns the
-// client that uses the specified http.Client for HTTP requests. If nil is
-// Scopes calls Client.Scopes on the default client.
-//
-//go:linkname NewClient cloud.google.com/go/compute/metadata.NewClient
-func NewClient(c *http.Client) *Client
