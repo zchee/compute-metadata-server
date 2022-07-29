@@ -57,6 +57,7 @@ func NewServer() *Server {
 	mux.Handle("/computeMetadata/v1", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1/project/project-id", safehttp.MethodGet, safehttp.HandlerFunc(projectHandler))
 	mux.Handle("/computeMetadata/v1/project/numeric-project-id", safehttp.MethodGet, safehttp.HandlerFunc(numericProjectHandler))
+	mux.Handle("/computeMetadata/v1/instance/hostname", safehttp.MethodGet, safehttp.HandlerFunc(hostnameHandler))
 
 	return &Server{
 		Server: &safehttp.Server{
