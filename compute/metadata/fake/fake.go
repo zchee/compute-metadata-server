@@ -86,8 +86,6 @@ func ProjectAttributeValue(attr string) (string, error)
 //go:linkname ProjectAttributes cloud.google.com/go/compute/metadata.ProjectAttributes
 func ProjectAttributes() ([]string, error)
 
-var projectEnvs = []string{"GOOGLE_CLOUD_PROJECT", "GCP_PROJECT", "GOOGLE_GCP_PROJECT"}
-
 // ProjectID returns the current instance's project ID string.
 func ProjectID() (string, error) {
 	for _, env := range projectEnvs {
