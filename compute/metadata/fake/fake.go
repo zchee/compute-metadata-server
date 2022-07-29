@@ -4,7 +4,6 @@
 package fakemetadata
 
 import (
-	"errors"
 	"os"
 
 	"net/http"
@@ -112,7 +111,7 @@ func ProjectID() (string, error) {
 		}
 	}
 
-	return "", errors.New("could not get ProjectID") // TODO(zchee): mimic metadata package's error
+	return "", metadata.NotDefinedError("project/project-id")
 }
 
 // Scopes calls Client.Scopes on the default client.
