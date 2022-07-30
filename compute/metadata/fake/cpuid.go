@@ -80,7 +80,7 @@ func (x86 X86Microarchitecture) String() string {
 	case INTEL_P5:
 		return "Intel P5"
 	case INTEL_LAKEMONT:
-		return "Intel LakeMont"
+		return "Intel lakemont"
 	case INTEL_CORE:
 		return "Intel Core"
 	case INTEL_PNR:
@@ -92,18 +92,18 @@ func (x86 X86Microarchitecture) String() string {
 	case INTEL_WSM:
 		return "Intel Westmere"
 	case INTEL_SNB:
-		return "Intel SandyBridge"
+		return "Intel Sandy Bridge"
 	case INTEL_IVB:
-		return "Intel IvyBridge"
+		return "Intel Ivy Bridge"
 	case INTEL_ATOM_SMT:
-		return "Intel SilverMont"
+		return "Intel silvermont"
 	case INTEL_HSW:
 		return "Intel Haswell"
 	case INTEL_BDW:
 		return "Intel Broadwell"
 	case INTEL_SKL:
 		return "Intel Skylake"
-	case INTEL_ATOM_GMT: // GOLDMONT
+	case INTEL_ATOM_GMT:
 		return "Intel Goldmont"
 	case INTEL_KBL:
 		return "Intel Kaby Lake"
@@ -136,7 +136,7 @@ func (x86 X86Microarchitecture) String() string {
 	case INTEL_NETBURST:
 		return "Intel Netburst"
 	case AMD_HAMMER:
-		return "AMD K8 HAMMER"
+		return "AMD K8 Hammer"
 	case AMD_K10:
 		return "AMD K10"
 	case AMD_K11:
