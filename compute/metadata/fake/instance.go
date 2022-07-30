@@ -4,7 +4,10 @@
 package fakemetadata
 
 import (
+	"strings"
+
 	"github.com/google/go-safeweb/safehttp"
+	"github.com/google/safehtml"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -42,9 +45,16 @@ var InstanceAttributeMap = map[string]bool{
 //
 // For more information about setting custom metadata, see Setting custom metadata.
 // directory
-func (h *InstanceHandler) Attributes() safehttp.Handler {
+func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
+	attrs := make([]string, len(m))
+	i := 0
+	for attr := range m {
+		attrs[i] = attr
+		i++
+	}
+
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		return w.Write(safehtml.HTMLEscaped(strings.Join(attrs, "\n")))
 	})
 }
 
