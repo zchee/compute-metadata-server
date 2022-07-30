@@ -5,12 +5,15 @@ package fakemetadata
 
 import (
 	"context"
+	"errors"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"reflect"
 	"strconv"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -52,9 +55,6 @@ func NewServer() *Server {
 	}
 }
 
-// Addr returns the fake metadata server addr.
-func (s *Server) Addr() string { return s.srv.Addr }
-
 var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
 
 // randomPort generates random port number and checks whether the it available (unused) port.
@@ -72,6 +72,9 @@ func randomPort(network string) string {
 		return p
 	}
 }
+
+// Addr returns the fake metadata server addr.
+func (s *Server) Addr() string { return s.srv.Addr }
 
 //go:linkname buildStd github.com/google/go-safeweb/safehttp.(*Server).buildStd
 //go:noescape
@@ -140,4 +143,24 @@ func (s *Server) Close() error {
 	defer os.Unsetenv(MetadataHostEnv)
 
 	return s.srv.Close()
+}
+
+var server unsafe.Pointer // *Server
+
+// StartServer starts fake metadata server.
+func StartServer() {
+	srv := NewServer()
+	go func() {
+		err := srv.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	atomic.StorePointer(&server, unsafe.Pointer(srv))
+}
+
+// Shutdown gracefully shuts down the fake metadata server.
+func Shutdown(ctx context.Context) error {
+	return (*Server)(atomic.LoadPointer(&server)).Shutdown(ctx)
 }
