@@ -20,6 +20,13 @@ import (
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#project_metadata
 type ProjectHandler struct{}
 
+func (h *ProjectHandler) RegisterHandlers(mux *safehttp.ServeMux) {
+	mux.Handle("/computeMetadata/v1/project/attributes", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/project/attributes/"))
+	mux.Handle("/computeMetadata/v1/project/attributes/", safehttp.MethodGet, h.Attributes(ProjectAttributeMap))
+	mux.Handle("/computeMetadata/v1/project/numeric-project-id", safehttp.MethodGet, h.NumericProjectID())
+	mux.Handle("/computeMetadata/v1/project/project-id", safehttp.MethodGet, h.ProjectID())
+}
+
 // ProjectAttributeMap map of porject attributes.
 //
 // The project attributes are stored under the following directory:
