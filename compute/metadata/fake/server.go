@@ -54,7 +54,11 @@ func NewServer() *Server {
 	muxConfig.Intercept(staticheaders.Interceptor{})
 
 	mux := muxConfig.Mux()
+	mux.Handle("/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
+	mux.Handle("/computeMetadata", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
+	mux.Handle("/computeMetadata/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
+	mux.Handle("/computeMetadata/v1/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	(&ProjectHandler{}).RegisterHandlers(mux)
 	(&InstanceHandler{}).RegisterHandlers(mux)
 

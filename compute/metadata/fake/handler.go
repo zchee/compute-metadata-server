@@ -4,11 +4,29 @@
 package fakemetadata
 
 import (
+	"strings"
+
 	"github.com/google/go-safeweb/safehttp"
+	"github.com/google/safehtml"
 )
 
-func rootHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
-	return w.WriteError(safehttp.StatusOK)
+var endpoints = []string{
+	"instance/",
+	"oslogin/",
+	"project/",
+}
+
+func rootHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	switch r.URL().Path() {
+	case "/", "/computeMetadata":
+		return w.Write(safehtml.HTMLEscaped("computeMetadata/"))
+	case "/computeMetadata/", "/computeMetadata/v1":
+		return w.Write(safehtml.HTMLEscaped("v1/"))
+	case "/computeMetadata/v1/":
+		return w.Write(safehtml.HTMLEscaped(strings.Join(endpoints, "\n")))
+	}
+
+	return safehttp.NotWritten()
 }
 
 func redirectHandler(to string) safehttp.Handler {
