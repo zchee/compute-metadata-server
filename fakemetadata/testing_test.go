@@ -1,9 +1,12 @@
+// Copyright 2022 The gce-metadata-server Authors
+// SPDX-License-Identifier: BSD-3-Clause
+
 package fakemetadata_test
 
 import (
 	"testing"
 
-	fakemetadata "github.com/zchee/gce-metadata-server/compute/metadata/fake"
+	"github.com/zchee/compute-metadata-server/fakemetadata"
 )
 
 func TestOnTest(t *testing.T) {
