@@ -4,7 +4,11 @@
 package fakemetadata
 
 import (
+	"os"
+	"strings"
+
 	"github.com/google/go-safeweb/safehttp"
+	"github.com/google/safehtml"
 )
 
 // ProjectHandler holds project metadata handlers.
@@ -83,23 +87,58 @@ var ProjectAttributeMap = map[string]bool{
 // For a list of project-level Google Cloud attributes that you can set, see Project attributes.
 //
 // For more information about setting custom metadata, see Setting VM metadata.
-func (h *ProjectHandler) Attributes() safehttp.Handler {
+func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
+	attrs := make([]string, len(m))
+	i := 0
+	for attr := range m {
+		attrs[i] = attr
+		i++
+	}
+
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		return w.Write(safehtml.HTMLEscaped(strings.Join(attrs, "\n")))
 	})
 }
+
+const (
+	EnvGoogleCloudProject = "GOOGLE_CLOUD_PROJECT"
+	EnvGCPProject         = "GCP_PROJECT"
+	EnvGoogleGCPProject   = "GOOGLE_GCP_PROJECT"
+)
+
+var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
 
 // NumericProjectID is the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
 // This value is different from the project-id metadata entry value.
 func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		for _, env := range projectEnvs {
+			if proj, ok := os.LookupEnv(env); ok {
+				return w.Write(safehtml.HTMLEscaped(proj))
+			}
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
 	})
 }
+
+const (
+	EnvGoogleCloudNumericProject = "GOOGLE_CLOUD_NUMERIC_PROJECT"
+	EnvGCPNumeriCProject         = "GCP_NUMERIC_PROJECT"
+	EnvGoogleGCPNumericProject   = "GOOGLE_GCP_NUMERIC_PROJECT"
+)
+
+var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumeriCProject, EnvGoogleGCPNumericProject}
 
 // ProjectID is the project ID.
 func (h *ProjectHandler) ProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		for _, env := range numericProjectEnvs {
+			if proj, ok := os.LookupEnv(env); ok {
+				return w.Write(safehtml.HTMLEscaped(proj))
+			}
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
 	})
 }
