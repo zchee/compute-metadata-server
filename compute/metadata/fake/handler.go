@@ -49,3 +49,9 @@ func numericProjectHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingReques
 
 	return w.WriteError(safehttp.StatusNotFound)
 }
+
+func redirectHandler(to string) safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.Redirect(w, r, to, safehttp.StatusFound)
+	})
+}

@@ -18,10 +18,13 @@ import (
 type InstanceHandler struct{}
 
 func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
-	mux.Handle("/computeMetadata/v1/instance/attributes", safehttp.MethodGet, h.Attributes(InstanceAttributeMap))
+	mux.Handle("/computeMetadata/v1/instance/attributes", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/attributes/"))
+	mux.Handle("/computeMetadata/v1/instance/attributes/", safehttp.MethodGet, h.Attributes(InstanceAttributeMap))
 	mux.Handle("/computeMetadata/v1/instance/cpu-platform", safehttp.MethodGet, h.CPUPlatform())
 	mux.Handle("/computeMetadata/v1/instance/description", safehttp.MethodGet, h.Description())
+	mux.Handle("/computeMetadata/v1/instance/disks", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/disks/"))
 	mux.Handle("/computeMetadata/v1/instance/disks/", safehttp.MethodGet, h.Disks())
+	mux.Handle("/computeMetadata/v1/instance/guest-attributes", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/guest-attributes/"))
 	mux.Handle("/computeMetadata/v1/instance/guest-attributes/", safehttp.MethodGet, h.GuestAttributes(InstanceGuestAttributeMap))
 	mux.Handle("/computeMetadata/v1/instance/hostname", safehttp.MethodGet, h.Hostname())
 	mux.Handle("/computeMetadata/v1/instance/id", safehttp.MethodGet, h.ID())
@@ -31,12 +34,16 @@ func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 	mux.Handle("/computeMetadata/v1/instance/machine-type", safehttp.MethodGet, h.MachineType())
 	mux.Handle("/computeMetadata/v1/instance/maintenance-event", safehttp.MethodGet, h.MaintenanceEvent())
 	mux.Handle("/computeMetadata/v1/instance/name", safehttp.MethodGet, h.Name())
+	mux.Handle("/computeMetadata/v1/instance/network-interfaces", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/network-interfaces/"))
 	mux.Handle("/computeMetadata/v1/instance/network-interfaces/", safehttp.MethodGet, h.NetworkInterfaces())
 	mux.Handle("/computeMetadata/v1/instance/preempted", safehttp.MethodGet, h.Preempted())
 	mux.Handle("/computeMetadata/v1/instance/remaining-cpu-time", safehttp.MethodGet, h.RemainingCPUTime())
+	mux.Handle("/computeMetadata/v1/instance/scheduling", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/scheduling/"))
 	mux.Handle("/computeMetadata/v1/instance/scheduling/", safehttp.MethodGet, h.Scheduling())
+	mux.Handle("/computeMetadata/v1/instance/service-accounts", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/service-accounts/"))
 	mux.Handle("/computeMetadata/v1/instance/service-accounts/", safehttp.MethodGet, h.ServiceAccounts())
 	mux.Handle("/computeMetadata/v1/instance/tags", safehttp.MethodGet, h.Tags())
+	mux.Handle("/computeMetadata/v1/instance/virtual-clock", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/instance/virtual-clock/"))
 	mux.Handle("/computeMetadata/v1/instance/virtual-clock/", safehttp.MethodGet, h.VirtualClock())
 	mux.Handle("/computeMetadata/v1/instance/zone", safehttp.MethodGet, h.Zone())
 }
@@ -70,7 +77,6 @@ var InstanceAttributeMap = map[string]bool{
 // For a list of instance-level Google Cloud attributes that you can set, see Instance attributes.
 //
 // For more information about setting custom metadata, see Setting custom metadata.
-// directory
 func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 	attrs := make([]string, len(m))
 	i := 0
@@ -111,7 +117,6 @@ func (h *InstanceHandler) Description() safehttp.Handler {
 //  type
 //
 // For more information about disks, see Storage options.
-// directory
 func (h *InstanceHandler) Disks() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
@@ -142,7 +147,6 @@ var InstanceGuestAttributeMap = map[string]bool{
 // Note: Any user or process on your VM instance can read and write to the namespaces and keys in guest-attributes metadata.
 //
 // For more information about guest attributes, see Setting and querying guest attributes.
-// directory
 func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 	attrs := make([]string, len(m))
 	i := 0
@@ -238,7 +242,6 @@ func (h *InstanceHandler) Name() safehttp.Handler {
 //	target-instance-ips
 //
 // For more information about network interfaces, see Multiple network interfaces overview.
-// directory
 func (h *InstanceHandler) NetworkInterfaces() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
@@ -308,7 +311,6 @@ func (h *InstanceHandler) Scheduling() safehttp.Handler {
 // For information about access tokens, see Authenticating applications directly with access tokens.
 //
 // For more information about service accounts, see Creating and enabling service accounts for instances.
-// directory
 func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
