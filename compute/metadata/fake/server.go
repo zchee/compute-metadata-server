@@ -69,6 +69,9 @@ func NewServer() *Server {
 	}
 }
 
+// Addr returns the fake metadata server addr.
+func (s *Server) Addr() string { return s.Server.Addr }
+
 //go:linkname buildStd github.com/google/go-safeweb/safehttp.(*Server).buildStd
 //go:noescape
 func buildStd(s *safehttp.Server) error
@@ -123,6 +126,3 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 
 	return s.Server.ServeTLS(l, certFile, keyFile)
 }
-
-// Addr returns the fake metadata server addr.
-func (s *Server) Addr() string { return s.Server.Addr }
