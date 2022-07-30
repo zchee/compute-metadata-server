@@ -44,7 +44,7 @@ type Server struct {
 func NewServer() *Server {
 	addr := net.JoinHostPort("localhost", randomPort("tcp4"))
 
-	// inject MetadataHostEnv hostname
+	// inject MetadataHostEnv host
 	os.Setenv(MetadataHostEnv, addr)
 
 	muxConfig := safehttp.NewServeMuxConfig(nil)
