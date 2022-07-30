@@ -119,7 +119,7 @@ var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumeriCPro
 // This value is different from the project-id metadata entry value.
 func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		for _, env := range projectEnvs {
+		for _, env := range numericProjectEnvs {
 			if proj, ok := os.LookupEnv(env); ok {
 				return w.Write(safehtml.HTMLEscaped(proj))
 			}
@@ -140,7 +140,7 @@ var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPPro
 // ProjectID is the project ID.
 func (h *ProjectHandler) ProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		for _, env := range numericProjectEnvs {
+		for _, env := range projectEnvs {
 			if proj, ok := os.LookupEnv(env); ok {
 				return w.Write(safehtml.HTMLEscaped(proj))
 			}
