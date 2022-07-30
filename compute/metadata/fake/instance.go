@@ -118,9 +118,16 @@ var InstanceGuestAttributeMap = map[string]bool{
 //
 // For more information about guest attributes, see Setting and querying guest attributes.
 // directory
-func (h *InstanceHandler) GuestAttributes() safehttp.Handler {
+func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
+	attrs := make([]string, len(m))
+	i := 0
+	for attr := range m {
+		attrs[i] = attr
+		i++
+	}
+
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		return w.Write(safehtml.HTMLEscaped(strings.Join(attrs, "\n")))
 	})
 }
 
