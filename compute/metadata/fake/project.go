@@ -88,6 +88,8 @@ var ProjectAttributeMap = map[string]bool{
 	"vmdnssetting": true,
 }
 
+const EnvGoogleProjectDefaultZone = "GOOGLE_PROJECT_DEFAULT_ZONE"
+
 // Attributes a directory of custom metadata values passed to the VMs in your project during startup or shutdown.
 // These custom values can either be Google Cloud attributes or user-created metadata values.
 //
@@ -95,16 +97,44 @@ var ProjectAttributeMap = map[string]bool{
 //
 // For more information about setting custom metadata, see Setting VM metadata.
 func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
-	attrs := make([]string, len(m))
-	i := 0
-	for attr := range m {
-		attrs[i] = attr
-		i++
-	}
+	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		if r.URL().Path() == "" {
+			attrs := make([]string, len(m))
+			i := 0
+			for attr := range m {
+				attrs[i] = attr
+				i++
+			}
+			return w.Write(safehtml.HTMLEscaped(strings.Join(attrs, "\n")))
+		}
 
-	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return w.Write(safehtml.HTMLEscaped(strings.Join(attrs, "\n")))
+		if path := r.URL().Path(); m[path] {
+			switch path {
+			case "disable-legacy-endpoints":
+				// TODO(zchee): not implemented
+			case "enable-guest-attributes":
+				// TODO(zchee): not implemented
+			case "enable-os-inventory":
+				// TODO(zchee): not implemented
+			case "enable-oslogin":
+				// TODO(zchee): not implemented
+			case "google-compute-default-region":
+				// TODO(zchee): not implemented
+			case "google-compute-default-zone":
+				if zone, ok := os.LookupEnv(EnvGoogleProjectDefaultZone); ok {
+					return w.Write(safehtml.HTMLEscaped(zone))
+				}
+			case "ssh-keys", "sshKeys":
+				// TODO(zchee): not implemented
+			case "vmdnssetting":
+				// TODO(zchee): not implemented
+			}
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
 	})
+
+	return safehttp.StripPrefix("/computeMetadata/v1/project/attributes/", handler)
 }
 
 const (
