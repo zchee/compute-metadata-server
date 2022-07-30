@@ -10,71 +10,59 @@ import (
 type X86Microarchitecture int
 
 const (
-	X86_UNKNOWN        X86Microarchitecture = iota
-	ZHAOXIN_ZHANGJIANG                      // ZhangJiang
-	ZHAOXIN_WUDAOKOU                        // WuDaoKou
-	ZHAOXIN_LUJIAZUI                        // LuJiaZui
-	ZHAOXIN_YONGFENG                        // YongFeng
-	INTEL_80486                             // https://en.wikichip.org/wiki/intel/microarchitectures/80486
-	INTEL_P5                                // https://en.wikichip.org/wiki/intel/microarchitectures/p5
-	INTEL_LAKEMONT                          // https://en.wikichip.org/wiki/intel/quark
-	INTEL_CORE                              // https://en.wikipedia.org/wiki/Intel_Core_(microarchitecture)
-	INTEL_PNR                               // https://en.wikipedia.org/wiki/Penryn_(microarchitecture)
-	INTEL_NHM                               // https://en.wikipedia.org/wiki/Nehalem_(microarchitecture)
-	INTEL_ATOM_BNL                          // https://en.wikipedia.org/wiki/Bonnell_(microarchitecture)
-	INTEL_WSM                               // https://en.wikipedia.org/wiki/Westmere_(microarchitecture)
-	INTEL_SNB                               // https://en.wikipedia.org/wiki/Sandy_Bridge#Models_and_steppings
-	INTEL_IVB                               // https://en.wikipedia.org/wiki/Ivy_Bridge_(microarchitecture)#Models_and_steppings
-	INTEL_ATOM_SMT                          // https://en.wikipedia.org/wiki/Silvermont
-	INTEL_HSW                               // https://en.wikipedia.org/wiki/Haswell_(microarchitecture)
-	INTEL_BDW                               // https://en.wikipedia.org/wiki/Broadwell_(microarchitecture)
-	INTEL_SKL                               // https://en.wikipedia.org/wiki/Skylake_(microarchitecture)
-	INTEL_ATOM_GMT                          // https://en.wikipedia.org/wiki/Goldmont
-	INTEL_KBL                               // https://en.wikipedia.org/wiki/Kaby_Lake
-	INTEL_CFL                               // https://en.wikipedia.org/wiki/Coffee_Lake
-	INTEL_WHL                               // https://en.wikipedia.org/wiki/Whiskey_Lake_(microarchitecture)
-	INTEL_CML                               // https://en.wikichip.org/wiki/intel/microarchitectures/comet_lake
-	INTEL_CNL                               // https://en.wikipedia.org/wiki/Cannon_Lake_(microarchitecture)
-	INTEL_ICL                               // https://en.wikipedia.org/wiki/Ice_Lake_(microprocessor)
-	INTEL_TGL                               // https://en.wikipedia.org/wiki/Tiger_Lake_(microarchitecture)
-	INTEL_SPR                               // https://en.wikipedia.org/wiki/Sapphire_Rapids
-	INTEL_ADL                               // https://en.wikichip.org/wiki/intel/microarchitectures/alder_lake
-	INTEL_RCL                               // https://en.wikichip.org/wiki/intel/microarchitectures/rocket_lake
-	INTEL_KNIGHTS_M                         // https://en.wikichip.org/wiki/intel/microarchitectures/knights_mill
-	INTEL_KNIGHTS_L                         // https://en.wikichip.org/wiki/intel/microarchitectures/knights_landing
-	INTEL_KNIGHTS_F                         // https://en.wikichip.org/wiki/intel/microarchitectures/knights_ferry
-	INTEL_KNIGHTS_C                         // https://en.wikichip.org/wiki/intel/microarchitectures/knights_corner
-	INTEL_NETBURST                          // https://en.wikichip.org/wiki/intel/microarchitectures/netburst
-	AMD_HAMMER                              // K8 HAMMER
-	AMD_K10                                 // K10
-	AMD_K11                                 // K11
-	AMD_K12                                 // K12
-	AMD_BOBCAT                              // K14 BOBCAT
-	AMD_PILEDRIVER                          // K15 PILEDRIVER
-	AMD_STREAMROLLER                        // K15 STREAMROLLER
-	AMD_EXCAVATOR                           // K15 EXCAVATOR
-	AMD_BULLDOZER                           // K15 BULLDOZER
-	AMD_JAGUAR                              // K16 JAGUAR
-	AMD_PUMA                                // K16 PUMA
-	AMD_ZEN                                 // K17 ZEN
-	AMD_ZEN_PLUS                            // K17 ZEN+
-	AMD_ZEN2                                // K17 ZEN 2
-	AMD_ZEN3                                // K19 ZEN 3
-	AMD_ZEN4                                // K19 ZEN 4
+	X86_UNKNOWN      X86Microarchitecture = iota
+	INTEL_80486                           // https://en.wikichip.org/wiki/intel/microarchitectures/80486
+	INTEL_P5                              // https://en.wikichip.org/wiki/intel/microarchitectures/p5
+	INTEL_LAKEMONT                        // https://en.wikichip.org/wiki/intel/quark
+	INTEL_CORE                            // https://en.wikipedia.org/wiki/Intel_Core_(microarchitecture)
+	INTEL_PNR                             // https://en.wikipedia.org/wiki/Penryn_(microarchitecture)
+	INTEL_NHM                             // https://en.wikipedia.org/wiki/Nehalem_(microarchitecture)
+	INTEL_ATOM_BNL                        // https://en.wikipedia.org/wiki/Bonnell_(microarchitecture)
+	INTEL_WSM                             // https://en.wikipedia.org/wiki/Westmere_(microarchitecture)
+	INTEL_SNB                             // https://en.wikipedia.org/wiki/Sandy_Bridge#Models_and_steppings
+	INTEL_IVB                             // https://en.wikipedia.org/wiki/Ivy_Bridge_(microarchitecture)#Models_and_steppings
+	INTEL_ATOM_SMT                        // https://en.wikipedia.org/wiki/Silvermont
+	INTEL_HSW                             // https://en.wikipedia.org/wiki/Haswell_(microarchitecture)
+	INTEL_BDW                             // https://en.wikipedia.org/wiki/Broadwell_(microarchitecture)
+	INTEL_SKL                             // https://en.wikipedia.org/wiki/Skylake_(microarchitecture)
+	INTEL_ATOM_GMT                        // https://en.wikipedia.org/wiki/Goldmont
+	INTEL_KBL                             // https://en.wikipedia.org/wiki/Kaby_Lake
+	INTEL_CFL                             // https://en.wikipedia.org/wiki/Coffee_Lake
+	INTEL_WHL                             // https://en.wikipedia.org/wiki/Whiskey_Lake_(microarchitecture)
+	INTEL_CML                             // https://en.wikichip.org/wiki/intel/microarchitectures/comet_lake
+	INTEL_CNL                             // https://en.wikipedia.org/wiki/Cannon_Lake_(microarchitecture)
+	INTEL_ICL                             // https://en.wikipedia.org/wiki/Ice_Lake_(microprocessor)
+	INTEL_TGL                             // https://en.wikipedia.org/wiki/Tiger_Lake_(microarchitecture)
+	INTEL_SPR                             // https://en.wikipedia.org/wiki/Sapphire_Rapids
+	INTEL_ADL                             // https://en.wikichip.org/wiki/intel/microarchitectures/alder_lake
+	INTEL_RCL                             // https://en.wikichip.org/wiki/intel/microarchitectures/rocket_lake
+	INTEL_KNIGHTS_M                       // https://en.wikichip.org/wiki/intel/microarchitectures/knights_mill
+	INTEL_KNIGHTS_L                       // https://en.wikichip.org/wiki/intel/microarchitectures/knights_landing
+	INTEL_KNIGHTS_F                       // https://en.wikichip.org/wiki/intel/microarchitectures/knights_ferry
+	INTEL_KNIGHTS_C                       // https://en.wikichip.org/wiki/intel/microarchitectures/knights_corner
+	INTEL_NETBURST                        // https://en.wikichip.org/wiki/intel/microarchitectures/netburst
+	AMD_HAMMER                            // K8 HAMMER
+	AMD_K10                               // K10
+	AMD_K11                               // K11
+	AMD_K12                               // K12
+	AMD_BOBCAT                            // K14 BOBCAT
+	AMD_PILEDRIVER                        // K15 PILEDRIVER
+	AMD_STREAMROLLER                      // K15 STREAMROLLER
+	AMD_EXCAVATOR                         // K15 EXCAVATOR
+	AMD_BULLDOZER                         // K15 BULLDOZER
+	AMD_JAGUAR                            // K16 JAGUAR
+	AMD_PUMA                              // K16 PUMA
+	AMD_ZEN                               // K17 ZEN
+	AMD_ZEN_PLUS                          // K17 ZEN+
+	AMD_ZEN2                              // K17 ZEN 2
+	AMD_ZEN3                              // K19 ZEN 3
+	AMD_ZEN4                              // K19 ZEN 4
 )
 
 func (x86 X86Microarchitecture) String() string {
 	switch x86 {
 	case X86_UNKNOWN:
 		return "UNKNOWN"
-	case ZHAOXIN_ZHANGJIANG:
-		return "Intel ZhangJiang"
-	case ZHAOXIN_WUDAOKOU:
-		return "Intel WuDaoKou"
-	case ZHAOXIN_LUJIAZUI:
-		return "Intel LuJiaZui"
-	case ZHAOXIN_YONGFENG:
-		return "Intel YongFeng"
 	case INTEL_80486:
 		return "Intel 80486"
 	case INTEL_P5:
