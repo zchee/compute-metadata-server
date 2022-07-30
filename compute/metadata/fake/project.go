@@ -4,7 +4,7 @@
 package fakemetadata
 
 import (
-	"net/http"
+	"github.com/google/go-safeweb/safehttp"
 )
 
 // ProjectHandler holds project metadata handlers.
@@ -83,11 +83,23 @@ var ProjectAttributeMap = map[string]bool{
 // For a list of project-level Google Cloud attributes that you can set, see Project attributes.
 //
 // For more information about setting custom metadata, see Setting VM metadata.
-func (h *ProjectHandler) Attributes(w http.ResponseWriter, r *http.Request) {}
+func (h *ProjectHandler) Attributes() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.NotWritten()
+	})
+}
 
 // NumericProjectID is the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
 // This value is different from the project-id metadata entry value.
-func (h *ProjectHandler) NumericProjectID(w http.ResponseWriter, r *http.Request) {}
+func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.NotWritten()
+	})
+}
 
 // ProjectID is the project ID.
-func (h *ProjectHandler) ProjectID(w http.ResponseWriter, r *http.Request) {}
+func (h *ProjectHandler) ProjectID() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.NotWritten()
+	})
+}
