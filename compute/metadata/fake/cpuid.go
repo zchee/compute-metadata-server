@@ -43,20 +43,20 @@ const (
 	INTEL_NETBURST                        // https://en.wikichip.org/wiki/intel/microarchitectures/netburst
 	AMD_HAMMER                            // K8 HAMMER
 	AMD_K10                               // K10
-	AMD_K11                               // K11
-	AMD_K12                               // K12
-	AMD_BOBCAT                            // K14 BOBCAT
-	AMD_PILEDRIVER                        // K15 PILEDRIVER
-	AMD_STREAMROLLER                      // K15 STREAMROLLER
-	AMD_EXCAVATOR                         // K15 EXCAVATOR
-	AMD_BULLDOZER                         // K15 BULLDOZER
+	AMD_K11                               // http://developer.amd.com/wordpress/media/2012/10/41788.pdf
+	AMD_K12                               // https://www.amd.com/system/files/TechDocs/44739_12h_Rev_Gd.pdf
+	AMD_BOBCAT                            // https://www.amd.com/system/files/TechDocs/47534_14h_Mod_00h-0Fh_Rev_Guide.pdf
+	AMD_PILEDRIVER                        // https://en.wikichip.org/wiki/amd/microarchitectures/piledriver
+	AMD_STREAMROLLER                      // https://en.wikichip.org/wiki/amd/microarchitectures/steamroller
+	AMD_EXCAVATOR                         // https://en.wikichip.org/wiki/amd/microarchitectures/excavator
+	AMD_BULLDOZER                         // https://en.wikichip.org/wiki/amd/microarchitectures/bulldozer
 	AMD_JAGUAR                            // K16 JAGUAR
 	AMD_PUMA                              // K16 PUMA
-	AMD_ZEN                               // K17 ZEN
-	AMD_ZEN_PLUS                          // K17 ZEN+
-	AMD_ZEN2                              // K17 ZEN 2
-	AMD_ZEN3                              // K19 ZEN 3
-	AMD_ZEN4                              // K19 ZEN 4
+	AMD_ZEN                               // https://en.wikichip.org/wiki/amd/microarchitectures/zen
+	AMD_ZEN_PLUS                          // https://en.wikichip.org/wiki/amd/microarchitectures/zen%2B
+	AMD_ZEN2                              // https://en.wikichip.org/wiki/amd/microarchitectures/zen_2
+	AMD_ZEN3                              // https://en.wikichip.org/wiki/amd/microarchitectures/zen_3
+	AMD_ZEN4                              // https://en.wikichip.org/wiki/amd/microarchitectures/zen_4
 )
 
 func (x86 X86Microarchitecture) String() string {
@@ -311,6 +311,120 @@ func detectCPUMicroarchitecture(info cpuid.CPUInfo) X86Microarchitecture {
 			matchFamilyModel(info, 0x0F, 0x04),
 			matchFamilyModel(info, 0x0F, 0x06):
 			return INTEL_NETBURST
+		}
+
+	case cpuid.AMD:
+		switch {
+		case matchFamilyModel(info, 0xF, 0x04),
+			matchFamilyModel(info, 0xF, 0x05),
+			matchFamilyModel(info, 0xF, 0x07),
+			matchFamilyModel(info, 0xF, 0x08),
+			matchFamilyModel(info, 0xF, 0x0C),
+			matchFamilyModel(info, 0xF, 0x0E),
+			matchFamilyModel(info, 0xF, 0x0F),
+			matchFamilyModel(info, 0xF, 0x14),
+			matchFamilyModel(info, 0xF, 0x15),
+			matchFamilyModel(info, 0xF, 0x17),
+			matchFamilyModel(info, 0xF, 0x18),
+			matchFamilyModel(info, 0xF, 0x1B),
+			matchFamilyModel(info, 0xF, 0x1C),
+			matchFamilyModel(info, 0xF, 0x1F),
+			matchFamilyModel(info, 0xF, 0x21),
+			matchFamilyModel(info, 0xF, 0x23),
+			matchFamilyModel(info, 0xF, 0x24),
+			matchFamilyModel(info, 0xF, 0x25),
+			matchFamilyModel(info, 0xF, 0x27),
+			matchFamilyModel(info, 0xF, 0x2B),
+			matchFamilyModel(info, 0xF, 0x2C),
+			matchFamilyModel(info, 0xF, 0x2F),
+			matchFamilyModel(info, 0xF, 0x41),
+			matchFamilyModel(info, 0xF, 0x43),
+			matchFamilyModel(info, 0xF, 0x48),
+			matchFamilyModel(info, 0xF, 0x4B),
+			matchFamilyModel(info, 0xF, 0x4C),
+			matchFamilyModel(info, 0xF, 0x4F),
+			matchFamilyModel(info, 0xF, 0x5D),
+			matchFamilyModel(info, 0xF, 0x5F),
+			matchFamilyModel(info, 0xF, 0x68),
+			matchFamilyModel(info, 0xF, 0x6B),
+			matchFamilyModel(info, 0xF, 0x6F),
+			matchFamilyModel(info, 0xF, 0x7F),
+			matchFamilyModel(info, 0xF, 0xC1):
+			return AMD_HAMMER
+
+		case matchFamilyModel(info, 0x10, 0x02),
+			matchFamilyModel(info, 0x10, 0x04),
+			matchFamilyModel(info, 0x10, 0x05),
+			matchFamilyModel(info, 0x10, 0x06),
+			matchFamilyModel(info, 0x10, 0x08),
+			matchFamilyModel(info, 0x10, 0x09),
+			matchFamilyModel(info, 0x10, 0x0A):
+			return AMD_K10
+
+		case matchFamilyModel(info, 0x11, 0x03):
+			return AMD_K11
+
+		case matchFamilyModel(info, 0x12, 0x01):
+			return AMD_K12
+
+		case matchFamilyModel(info, 0x14, 0x00),
+			matchFamilyModel(info, 0x14, 0x01),
+			matchFamilyModel(info, 0x14, 0x02):
+			return AMD_BOBCAT
+
+		case matchFamilyModel(info, 0x15, 0x01):
+			return AMD_BULLDOZER
+
+		case matchFamilyModel(info, 0x15, 0x02),
+			matchFamilyModel(info, 0x15, 0x11),
+			matchFamilyModel(info, 0x15, 0x13):
+			return AMD_PILEDRIVER
+
+		case matchFamilyModel(info, 0x15, 0x30),
+			matchFamilyModel(info, 0x15, 0x38):
+			return AMD_STREAMROLLER
+
+		case matchFamilyModel(info, 0x15, 0x60),
+			matchFamilyModel(info, 0x15, 0x65),
+			matchFamilyModel(info, 0x15, 0x70):
+			return AMD_EXCAVATOR
+
+		case matchFamilyModel(info, 0x16, 0x00):
+			return AMD_JAGUAR
+
+		case matchFamilyModel(info, 0x16, 0x30):
+			return AMD_PUMA
+
+		case matchFamilyModel(info, 0x17, 0x01),
+			matchFamilyModel(info, 0x17, 0x11),
+			matchFamilyModel(info, 0x17, 0x18),
+			matchFamilyModel(info, 0x17, 0x20):
+			return AMD_ZEN
+
+		case matchFamilyModel(info, 0x17, 0x08):
+			return AMD_ZEN_PLUS
+
+		case matchFamilyModel(info, 0x17, 0x31),
+			matchFamilyModel(info, 0x17, 0x47),
+			matchFamilyModel(info, 0x17, 0x60),
+			matchFamilyModel(info, 0x17, 0x68),
+			matchFamilyModel(info, 0x17, 0x71),
+			matchFamilyModel(info, 0x17, 0x90),
+			matchFamilyModel(info, 0x17, 0x98):
+			return AMD_ZEN2
+
+		case matchFamilyModel(info, 0x19, 0x00),
+			matchFamilyModel(info, 0x19, 0x01),
+			matchFamilyModel(info, 0x19, 0x08),
+			matchFamilyModel(info, 0x19, 0x21),
+			matchFamilyModel(info, 0x19, 0x30),
+			matchFamilyModel(info, 0x19, 0x40),
+			matchFamilyModel(info, 0x19, 0x44),
+			matchFamilyModel(info, 0x19, 0x50):
+			return AMD_ZEN3
+
+		case matchFamilyModel(info, 0x19, 0x10):
+			return AMD_ZEN4
 		}
 	}
 
