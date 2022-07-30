@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/safehtml"
+	cpuid "github.com/klauspost/cpuid/v2"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -63,7 +64,7 @@ func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 // For information about CPU platforms, see CPU platforms.
 func (h *InstanceHandler) CPUPlatform() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+		return w.Write(safehtml.HTMLEscaped(detectCPUMicroarchitecture(cpuid.CPU).String()))
 	})
 }
 

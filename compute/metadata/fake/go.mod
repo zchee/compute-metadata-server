@@ -8,10 +8,11 @@ require (
 	cloud.google.com/go/iam v0.3.0
 	github.com/google/go-safeweb v0.0.0-20220125171915-eb79df54b8bc
 	github.com/google/safehtml v0.0.2
+	github.com/klauspost/cpuid/v2 v2.1.1-0.20220725114759-b27ab7bf7451
 	github.com/zchee/gce-metadata-server/compute v0.0.0-20220614120728-0750052a9ff2
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
-	golang.org/x/sys v0.0.0-20220610221304-9f5ed59c137d
+	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e
 	google.golang.org/api v0.84.0
 	google.golang.org/genproto v0.0.0-20220616135557-88e70c0c3a90
 )
