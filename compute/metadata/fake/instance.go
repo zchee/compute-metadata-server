@@ -17,6 +17,7 @@ import (
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
 type InstanceHandler struct{}
 
+// RegisterHandlers registers instance handlers to mux.
 func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 	mux.Handle("/computeMetadata/v1/instance/attributes", safehttp.MethodGet, redirectHandler("computeMetadata/v1/instance/attributes/"))
 	mux.Handle("/computeMetadata/v1/instance/attributes/", safehttp.MethodGet, h.Attributes(InstanceAttributeMap))

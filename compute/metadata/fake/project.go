@@ -20,6 +20,7 @@ import (
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#project_metadata
 type ProjectHandler struct{}
 
+// RegisterHandlers registers project handlers to mux.
 func (h *ProjectHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 	mux.Handle("/computeMetadata/v1/project/attributes", safehttp.MethodGet, redirectHandler("computeMetadata/v1/project/attributes/"))
 	mux.Handle("/computeMetadata/v1/project/attributes/", safehttp.MethodGet, h.Attributes(ProjectAttributeMap))
