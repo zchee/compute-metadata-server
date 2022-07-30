@@ -21,7 +21,7 @@ import (
 type ProjectHandler struct{}
 
 func (h *ProjectHandler) RegisterHandlers(mux *safehttp.ServeMux) {
-	mux.Handle("/computeMetadata/v1/project/attributes", safehttp.MethodGet, redirectHandler("/computeMetadata/v1/project/attributes/"))
+	mux.Handle("/computeMetadata/v1/project/attributes", safehttp.MethodGet, redirectHandler("computeMetadata/v1/project/attributes/"))
 	mux.Handle("/computeMetadata/v1/project/attributes/", safehttp.MethodGet, h.Attributes(ProjectAttributeMap))
 	mux.Handle("/computeMetadata/v1/project/numeric-project-id", safehttp.MethodGet, h.NumericProjectID())
 	mux.Handle("/computeMetadata/v1/project/project-id", safehttp.MethodGet, h.ProjectID())

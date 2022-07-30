@@ -4,6 +4,8 @@
 package fakemetadata
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/google/go-safeweb/safehttp"
@@ -31,6 +33,7 @@ func rootHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehtt
 
 func redirectHandler(to string) safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.Redirect(w, r, to, safehttp.StatusFound)
+		w.Header().Set("Location", fmt.Sprintf("http://%s/%s", os.Getenv(MetadataHostEnv), to))
+		return w.WriteError(safehttp.StatusMovedPermanently)
 	})
 }
