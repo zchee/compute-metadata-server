@@ -18,24 +18,6 @@ import (
 	"golang.org/x/net/http2"
 )
 
-var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
-
-// randomPort generates random port number and checks whether the it available (unused) port.
-func randomPort(network string) string {
-	var p string
-	rnd := rand.New(portRandSrc)
-	for {
-		p = strconv.Itoa(rnd.Intn(55535) + 1000)
-		if conn, err := net.Dial(network, p); err == nil {
-			// not available
-			conn.Close()
-			continue
-		}
-
-		return p
-	}
-}
-
 // Server represents a fake metadata server.
 type Server struct {
 	srv *safehttp.Server
@@ -72,6 +54,24 @@ func NewServer() *Server {
 
 // Addr returns the fake metadata server addr.
 func (s *Server) Addr() string { return s.srv.Addr }
+
+var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
+
+// randomPort generates random port number and checks whether the it available (unused) port.
+func randomPort(network string) string {
+	var p string
+	rnd := rand.New(portRandSrc)
+	for {
+		p = strconv.Itoa(rnd.Intn(55535) + 1000)
+		if conn, err := net.Dial(network, p); err == nil {
+			// not available
+			conn.Close()
+			continue
+		}
+
+		return p
+	}
+}
 
 //go:linkname buildStd github.com/google/go-safeweb/safehttp.(*Server).buildStd
 //go:noescape
