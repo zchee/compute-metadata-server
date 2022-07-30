@@ -108,12 +108,12 @@ func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
 }
 
 const (
-	EnvGoogleCloudProject = "GOOGLE_CLOUD_PROJECT"
-	EnvGCPProject         = "GCP_PROJECT"
-	EnvGoogleGCPProject   = "GOOGLE_GCP_PROJECT"
+	EnvGoogleCloudNumericProject = "GOOGLE_CLOUD_NUMERIC_PROJECT"
+	EnvGCPNumeriCProject         = "GCP_NUMERIC_PROJECT"
+	EnvGoogleGCPNumericProject   = "GOOGLE_GCP_NUMERIC_PROJECT"
 )
 
-var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
+var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumeriCProject, EnvGoogleGCPNumericProject}
 
 // NumericProjectID is the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
 // This value is different from the project-id metadata entry value.
@@ -130,12 +130,12 @@ func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
 }
 
 const (
-	EnvGoogleCloudNumericProject = "GOOGLE_CLOUD_NUMERIC_PROJECT"
-	EnvGCPNumeriCProject         = "GCP_NUMERIC_PROJECT"
-	EnvGoogleGCPNumericProject   = "GOOGLE_GCP_NUMERIC_PROJECT"
+	EnvGoogleCloudProject = "GOOGLE_CLOUD_PROJECT"
+	EnvGCPProject         = "GCP_PROJECT"
+	EnvGoogleGCPProject   = "GOOGLE_GCP_PROJECT"
 )
 
-var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumeriCProject, EnvGoogleGCPNumericProject}
+var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
 
 // ProjectID is the project ID.
 func (h *ProjectHandler) ProjectID() safehttp.Handler {
