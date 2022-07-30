@@ -5,6 +5,7 @@ package fakemetadata
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"log"
 	"math/rand"
@@ -84,7 +85,7 @@ func configureHTTP2Server(s *safehttp.Server, conf *http2.Server) *safehttp.Serv
 	v := reflect.ValueOf(s).Elem()
 	srv := v.FieldByName("srv")
 	addr := unsafe.Pointer(srv.UnsafeAddr())
-	(*http.Server)(addr).TLSConfig = s.TLSConfig
+	(*http.Server)(addr).TLSConfig = new(tls.Config)
 
 	http2.ConfigureServer((*http.Server)(addr), conf)
 
