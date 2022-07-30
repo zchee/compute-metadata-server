@@ -130,10 +130,14 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 
 // Shutdown is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Shutdown
 func (s *Server) Shutdown(ctx context.Context) error {
+	defer os.Unsetenv(MetadataHostEnv)
+
 	return s.srv.Shutdown(ctx)
 }
 
 // Close is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Close
 func (s *Server) Close() error {
+	defer os.Unsetenv(MetadataHostEnv)
+
 	return s.srv.Close()
 }
