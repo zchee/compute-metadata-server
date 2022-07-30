@@ -14,7 +14,13 @@ func rootHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehtt
 	return w.WriteError(safehttp.StatusOK)
 }
 
-var projectEnvs = []string{"GOOGLE_CLOUD_PROJECT", "GCP_PROJECT", "GOOGLE_GCP_PROJECT"}
+const (
+	EnvGoogleCloudProject = "GOOGLE_CLOUD_PROJECT"
+	EnvGCPProject         = "GCP_PROJECT"
+	EnvGoogleGCPProject   = "GOOGLE_GCP_PROJECT"
+)
+
+var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
 
 func projectHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
 	for _, env := range projectEnvs {
@@ -26,7 +32,13 @@ func projectHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safe
 	return w.WriteError(safehttp.StatusNotFound)
 }
 
-var numericProjectEnvs = []string{"GOOGLE_CLOUD_NUMERIC_PROJECT", "GCP_NUMERIC_PROJECT", "GOOGLE_GCP_NUMERIC_PROJECT"}
+const (
+	EnvGoogleCloudNumericProject = "GOOGLE_CLOUD_NUMERIC_PROJECT"
+	EnvGCPNumeriCProject         = "GCP_NUMERIC_PROJECT"
+	EnvGoogleGCPNumericProject   = "GOOGLE_GCP_NUMERIC_PROJECT"
+)
+
+var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumeriCProject, EnvGoogleGCPNumericProject}
 
 func numericProjectHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
 	for _, env := range numericProjectEnvs {

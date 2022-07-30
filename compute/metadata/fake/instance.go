@@ -156,15 +156,13 @@ func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 	})
 }
 
-var hostnameEnvs = []string{"GOOGLE_HOSTNAME"}
+const EnvInstanceHostname = "GOOGLE_INSTANCE_HOSTNAME"
 
 // Hostname is the hostname of the VM.
 func (h *InstanceHandler) Hostname() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		for _, env := range hostnameEnvs {
-			if hostname, ok := os.LookupEnv(env); ok {
-				return w.Write(safehtml.HTMLEscaped(hostname))
-			}
+		if hostname, ok := os.LookupEnv(EnvInstanceHostname); ok {
+			return w.Write(safehtml.HTMLEscaped(hostname))
 		}
 
 		return w.WriteError(safehttp.StatusNotFound)
