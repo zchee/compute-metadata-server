@@ -37,15 +37,3 @@ func numericProjectHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingReques
 
 	return w.WriteError(safehttp.StatusNotFound)
 }
-
-var hostnameEnvs = []string{"GOOGLE_HOSTNAME"}
-
-func hostnameHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
-	for _, env := range hostnameEnvs {
-		if hostname, ok := os.LookupEnv(env); ok {
-			return w.Write(safehtml.HTMLEscaped(hostname))
-		}
-	}
-
-	return w.WriteError(safehttp.StatusNotFound)
-}
