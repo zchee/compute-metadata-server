@@ -4,6 +4,7 @@
 package fakemetadata
 
 import (
+	"context"
 	"math/rand"
 	"net"
 	"net/http"
@@ -37,7 +38,7 @@ func randomPort(network string) string {
 
 // Server represents a fake metadata server.
 type Server struct {
-	*safehttp.Server
+	srv *safehttp.Server
 }
 
 // NewServer returns the new fake metadata server.
@@ -62,7 +63,7 @@ func NewServer() *Server {
 	(&InstanceHandler{}).RegisterHandlers(mux)
 
 	return &Server{
-		Server: &safehttp.Server{
+		srv: &safehttp.Server{
 			Addr: addr,
 			Mux:  mux,
 		},
@@ -70,7 +71,7 @@ func NewServer() *Server {
 }
 
 // Addr returns the fake metadata server addr.
-func (s *Server) Addr() string { return s.Server.Addr }
+func (s *Server) Addr() string { return s.srv.Addr }
 
 //go:linkname buildStd github.com/google/go-safeweb/safehttp.(*Server).buildStd
 //go:noescape
@@ -87,42 +88,52 @@ func configureHTTP2Server(s *safehttp.Server, conf *http2.Server) *safehttp.Serv
 	return s
 }
 
-// ListenAndServe is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServe
+// ListenAndServe is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.ListenAndServe
 func (s *Server) ListenAndServe() error {
-	if err := buildStd(s.Server); err != nil {
+	if err := buildStd(s.srv); err != nil {
 		return err
 	}
-	configureHTTP2Server(s.Server, &http2.Server{})
+	configureHTTP2Server(s.srv, &http2.Server{})
 
-	return s.Server.ListenAndServe()
+	return s.srv.ListenAndServe()
 }
 
-// ListenAndServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServeTLS
+// ListenAndServeTLS is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.ListenAndServeTLS
 func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
-	if err := buildStd(s.Server); err != nil {
+	if err := buildStd(s.srv); err != nil {
 		return err
 	}
-	configureHTTP2Server(s.Server, &http2.Server{})
+	configureHTTP2Server(s.srv, &http2.Server{})
 
-	return s.Server.ListenAndServeTLS(certFile, keyFile)
+	return s.srv.ListenAndServeTLS(certFile, keyFile)
 }
 
-// Serve is a wrapper for https://golang.org/pkg/net/http/#Server.Serve
+// Serve is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Serve
 func (s *Server) Serve(l net.Listener) error {
-	if err := buildStd(s.Server); err != nil {
+	if err := buildStd(s.srv); err != nil {
 		return err
 	}
-	configureHTTP2Server(s.Server, &http2.Server{})
+	configureHTTP2Server(s.srv, &http2.Server{})
 
-	return s.Server.Serve(l)
+	return s.srv.Serve(l)
 }
 
-// ServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ServeTLS
+// ServeTLS is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.ServeTLS
 func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
-	if err := buildStd(s.Server); err != nil {
+	if err := buildStd(s.srv); err != nil {
 		return err
 	}
-	configureHTTP2Server(s.Server, &http2.Server{})
+	configureHTTP2Server(s.srv, &http2.Server{})
 
-	return s.Server.ServeTLS(l, certFile, keyFile)
+	return s.srv.ServeTLS(l, certFile, keyFile)
+}
+
+// Shutdown is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Shutdown
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.srv.Shutdown(ctx)
+}
+
+// Close is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Close
+func (s *Server) Close() error {
+	return s.srv.Close()
 }
