@@ -161,6 +161,11 @@ func StartServer() {
 	atomic.StorePointer(&server, unsafe.Pointer(srv))
 }
 
+// IsRunning reports whether the fake metadata server running.
+func IsRunning() bool {
+	return atomic.LoadPointer(&server) != nil
+}
+
 // Shutdown gracefully shuts down the fake metadata server.
 func Shutdown(ctx context.Context) error {
 	return (*Server)(atomic.LoadPointer(&server)).Shutdown(ctx)
