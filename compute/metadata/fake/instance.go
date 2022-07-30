@@ -16,6 +16,30 @@ import (
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
 type InstanceHandler struct{}
 
+func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
+	mux.Handle("/computeMetadata/v1/instance/attributes", safehttp.MethodGet, h.Attributes(InstanceAttributeMap))
+	mux.Handle("/computeMetadata/v1/instance/cpu-platform", safehttp.MethodGet, h.CPUPlatform())
+	mux.Handle("/computeMetadata/v1/instance/description", safehttp.MethodGet, h.Description())
+	mux.Handle("/computeMetadata/v1/instance/disks/", safehttp.MethodGet, h.Disks())
+	mux.Handle("/computeMetadata/v1/instance/guest-attributes/", safehttp.MethodGet, h.GuestAttributes(InstanceGuestAttributeMap))
+	mux.Handle("/computeMetadata/v1/instance/hostname", safehttp.MethodGet, h.Hostname())
+	mux.Handle("/computeMetadata/v1/instance/id", safehttp.MethodGet, h.ID())
+	mux.Handle("/computeMetadata/v1/instance/image", safehttp.MethodGet, h.Image())
+	mux.Handle("/computeMetadata/v1/instance/legacy-endpoint-access/", safehttp.MethodGet, h.LegacyEndpointAccess())
+	mux.Handle("/computeMetadata/v1/instance/licenses/", safehttp.MethodGet, h.Licenses())
+	mux.Handle("/computeMetadata/v1/instance/machine-type", safehttp.MethodGet, h.MachineType())
+	mux.Handle("/computeMetadata/v1/instance/maintenance-event", safehttp.MethodGet, h.MaintenanceEvent())
+	mux.Handle("/computeMetadata/v1/instance/name", safehttp.MethodGet, h.Name())
+	mux.Handle("/computeMetadata/v1/instance/network-interfaces/", safehttp.MethodGet, h.NetworkInterfaces())
+	mux.Handle("/computeMetadata/v1/instance/preempted", safehttp.MethodGet, h.Preempted())
+	mux.Handle("/computeMetadata/v1/instance/remaining-cpu-time", safehttp.MethodGet, h.RemainingCPUTime())
+	mux.Handle("/computeMetadata/v1/instance/scheduling/", safehttp.MethodGet, h.Scheduling())
+	mux.Handle("/computeMetadata/v1/instance/service-accounts/", safehttp.MethodGet, h.ServiceAccounts())
+	mux.Handle("/computeMetadata/v1/instance/tags", safehttp.MethodGet, h.Tags())
+	mux.Handle("/computeMetadata/v1/instance/virtual-clock/", safehttp.MethodGet, h.VirtualClock())
+	mux.Handle("/computeMetadata/v1/instance/zone", safehttp.MethodGet, h.Zone())
+}
+
 // InstanceAttributeMap map of instance attributes.
 //
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#instance-attributes-metadata
@@ -221,6 +245,12 @@ func (h *InstanceHandler) Preempted() safehttp.Handler {
 	})
 }
 
+func (h *InstanceHandler) RemainingCPUTime() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.NotWritten()
+	})
+}
+
 // Scheduling sets the scheduling options for the VM.
 //
 // Scheduling metadata values include the following:
@@ -282,6 +312,12 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 //
 // For more information about network tags, see Configuring network tags.
 func (h *InstanceHandler) Tags() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		return safehttp.NotWritten()
+	})
+}
+
+func (h *InstanceHandler) VirtualClock() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
