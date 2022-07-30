@@ -14,7 +14,6 @@ import (
 	"unsafe"
 
 	"github.com/google/go-safeweb/safehttp"
-	"github.com/google/go-safeweb/safehttp/plugins/staticheaders"
 	"golang.org/x/net/http2"
 )
 
@@ -49,9 +48,9 @@ func NewServer() *Server {
 	os.Setenv(MetadataHostEnv, addr)
 
 	muxConfig := safehttp.NewServeMuxConfig(nil)
-	muxConfig.Intercept(metadataInterceptor{})
+	muxConfig.Intercept(metadataFlavorInterceptor{})
 	muxConfig.Intercept(serverInterceptor{})
-	muxConfig.Intercept(staticheaders.Interceptor{})
+	muxConfig.Intercept(staticHeadersInterceptor{})
 
 	mux := muxConfig.Mux()
 	mux.Handle("/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
