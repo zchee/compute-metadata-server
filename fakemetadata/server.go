@@ -79,16 +79,9 @@ func (s *Server) Addr() string { return s.srv.Addr }
 
 func buildStd(s *safehttp.Server) error {
 	v := reflect.ValueOf(s).Elem()
-	tartedVal := v.FieldByName("started")
-	startedPtr := unsafe.Pointer(tartedVal.UnsafeAddr())
-
-	if *(*bool)(startedPtr) {
-		return errors.New("server already started")
-	}
 
 	srvVal := v.FieldByName("srv")
-	srvPtr := unsafe.Pointer(srvVal.UnsafeAddr())
-	if (*http.Server)(srvPtr) != nil {
+	if toExport(srvVal).Interface().(*http.Server) != nil {
 		// Server was already built
 		return nil
 	}
@@ -132,7 +125,7 @@ func buildStd(s *safehttp.Server) error {
 
 	http2.ConfigureServer(srv, &http2.Server{})
 
-	*(*http.Server)(srvPtr) = *srv
+	toExport(srvVal).Set(reflect.ValueOf(srv))
 
 	return nil
 }
