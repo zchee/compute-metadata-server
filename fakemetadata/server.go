@@ -34,7 +34,7 @@ func NewServer() *Server {
 	// inject MetadataHostEnv host
 	os.Setenv(MetadataHostEnv, addr)
 
-	muxConfig := safehttp.NewServeMuxConfig(safehttp.DefaultDispatcher{})
+	muxConfig := safehttp.NewServeMuxConfig(Dispatcher{})
 	muxConfig.Intercept(metadataFlavorInterceptor{})
 	muxConfig.Intercept(serverInterceptor{})
 	muxConfig.Intercept(staticHeadersInterceptor{})

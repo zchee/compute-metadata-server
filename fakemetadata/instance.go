@@ -4,12 +4,19 @@
 package fakemetadata
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
+	pathpkg "path"
 	"strings"
+	"time"
+	"unsafe"
 
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/safehtml"
 	cpuid "github.com/klauspost/cpuid/v2"
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/jwt"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -347,6 +354,22 @@ func (h *InstanceHandler) Scheduling() safehttp.Handler {
 	})
 }
 
+const (
+	// EnvGoogleApplicationCredentials environment variable name for overrides application default credentials JSON path.
+	EnvGoogleApplicationCredentials = "GOOGLE_APPLICATION_CREDENTIALS"
+
+	// EnvGoogleAccountEmail environment variable name for overrides service account email address.
+	EnvGoogleAccountEmail = "GOOGLE_ACCOUNT_EMAIL"
+)
+
+var serviceAccountsEndpoints = []string{
+	"aliases",
+	"email",
+	"identity",
+	"scopes",
+	"token",
+}
+
 // ServiceAccounts a directory of service accounts associated with the VM. For each service account, the following information is available:
 //
 //	aliases
@@ -375,9 +398,139 @@ func (h *InstanceHandler) Scheduling() safehttp.Handler {
 //
 // For more information about service accounts, see Creating and enabling service accounts for instances.
 func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
-	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		url := r.URL()
+		q, err := url.Query()
+		if err != nil {
+			return w.WriteError(safehttp.StatusInternalServerError)
+		}
+		queries := strings.Split(q.String("scopes", ""), ",")
+
+		path := url.Path()
+		if path == "" {
+			saEndpoints := []string{
+				"default/",
+			}
+			saEmail, err := h.findServiceAccountEmail(queries...)
+			if err != nil {
+				return w.Write(NewStatusError(err, safehttp.StatusBadRequest))
+			}
+			saEndpoints = append(saEndpoints, saEmail+"/")
+
+			return w.Write(safehtml.HTMLEscaped(strings.Join(saEndpoints, "\n")))
+		}
+
+		gsa, attr := pathpkg.Split(path)
+		switch attr {
+		case "":
+			return w.Write(safehtml.HTMLEscaped(strings.Join(serviceAccountsEndpoints, "\n")))
+
+		case "aliases":
+			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
+		case "email":
+			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
+		case "identity":
+			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
+		case "scopes":
+			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
+		case "token":
+			return h.serviceAccountsTokenHandler(w, r, gsa, queries...)
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
 	})
+
+	return safehttp.StripPrefix("/computeMetadata/v1/instance/service-accounts/", handler)
+}
+
+func (h *InstanceHandler) findServiceAccountEmail(scopes ...string) (string, error) {
+	saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+	if !ok {
+		// try to find application default credentials JSON path
+		filename, ok := os.LookupEnv(EnvGoogleApplicationCredentials)
+		if !ok {
+			err := fmt.Errorf("both of %q and %q environment variables is empty",
+				EnvGoogleAccountEmail,
+				EnvGoogleApplicationCredentials,
+			)
+			return "", err
+		}
+
+		jwtCfg, err := h.jwtConfigFromServiceAccount(filename, scopes...)
+		if err != nil {
+			return "", err
+		}
+		saEmail = jwtCfg.Email
+	}
+
+	return saEmail, nil
+}
+
+func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes ...string) (*jwt.Config, error) {
+	data, err := os.ReadFile(filenname)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = fs.ErrNotExist // overwrite underlying error to fs.ErrNotExist
+			return nil, fmt.Errorf("%s %w", filenname, err)
+		}
+
+		return nil, fmt.Errorf("could not read %s file: %w", filenname, err)
+	}
+
+	jwtCfg, err := google.JWTConfigFromJSON(data, scopes...)
+	if err != nil {
+		return nil, fmt.Errorf("could not get jwt configuration: %w", err)
+	}
+
+	return jwtCfg, nil
+}
+
+// TokenResponse represents a JSON response of service account token.
+type TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+}
+
+func (h *InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa string, scopes ...string) safehttp.Result {
+	now := time.Now().In(time.UTC) // for calculate tokne expires
+
+	if gsa == "default" {
+		var err error
+		gsa, err = h.findServiceAccountEmail()
+		if err != nil {
+			return w.Write(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+	}
+
+	creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{
+		Scopes: scopes,
+	})
+	if err != nil {
+		return w.Write(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	tok, err := creds.TokenSource.Token()
+	if err != nil {
+		return w.WriteError(safehttp.StatusInternalServerError)
+	}
+
+	expiresIn := tok.Expiry.In(time.UTC).Sub(now).Round(time.Second).Seconds()
+	resp := TokenResponse{
+		AccessToken: tok.AccessToken,
+		ExpiresIn:   *(*int)(unsafe.Pointer(&expiresIn)),
+		TokenType:   tok.TokenType,
+	}
+
+	return safehttp.WriteJSON(w, &resp)
 }
 
 // Tags lists any network tags associated with the VM.
