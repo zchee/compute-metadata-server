@@ -21,7 +21,7 @@ func toExport(v reflect.Value) reflect.Value {
 
 	ptr := unsafe.Pointer(&v)
 	fptr := (*uintptr)(unsafe.Pointer(uintptr(ptr) + offset))
-	*fptr = *fptr &^ flagRO
+	*fptr &^= flagRO
 
 	return v
 }
