@@ -430,8 +430,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.Write(safehtml.HTMLEscaped(strings.Join(serviceAccountsEndpoints, "\n")))
 
 		case "aliases":
-			// TODO(zchee): not implemented
-			return w.WriteError(safehttp.StatusNotImplemented)
+			return w.Write(safehtml.HTMLEscaped("default"))
 
 		case "email":
 			return h.serviceAccountsEmailHandler(w, r, gsa)
@@ -444,8 +443,8 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return h.serviceAccountsIdentityHandler(w, r, gsa, audience)
 
 		case "scopes":
-			// TODO(zchee): not implemented
-			return w.WriteError(safehttp.StatusNotImplemented)
+			const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+			return w.Write(safehtml.HTMLEscaped(cloudPlatformScope))
 
 		case "token":
 			return h.serviceAccountsTokenHandler(w, r, scopes...)
