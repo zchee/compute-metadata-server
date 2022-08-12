@@ -188,31 +188,40 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	return s.srv.ServeTLS(l, certFile, keyFile)
 }
 
-// EnableImpersonate enable impersonate service account to sa.
-func (s *Server) EnableImpersonate(sa string) {
+// EnableImpersonate enable impersonate service account.
+func (s *Server) EnableImpersonate() {
 	s.mu.Lock()
-	s.instance.impersonateServiceAccount = sa
+	s.instance.useImpersonate = true
 	s.mu.Unlock()
 }
 
 // DisableImpersonate disable impersonate service account.
 func (s *Server) DisableImpersonate() {
 	s.mu.Lock()
-	s.instance.impersonateServiceAccount = ""
+	s.instance.useImpersonate = false
+	s.instance.delegates = nil
 	s.mu.Unlock()
 }
 
 // EnableWorkloadIdentityFederation enable Workload Identity Federation ADC.
-func (s *Server) EnableWorkloadIdentityFederation(sa string) {
+func (s *Server) EnableWorkloadIdentityFederation() {
 	s.mu.Lock()
-	s.instance.federateServiceAccount = sa
+	s.instance.useFederate = true
 	s.mu.Unlock()
 }
 
 // DisableWorkloadIdentityFederation disable Workload Identity Federation ADC.
 func (s *Server) DisableWorkloadIdentityFederation() {
 	s.mu.Lock()
-	s.instance.federateServiceAccount = ""
+	s.instance.useFederate = false
+	s.instance.delegates = nil
+	s.mu.Unlock()
+}
+
+// SetDelegateServiceAccount sets sequence of service accounts in a delegation chain.
+func (s *Server) SetDelegateServiceAccount(delegates []string) {
+	s.mu.Lock()
+	s.instance.delegates = delegates
 	s.mu.Unlock()
 }
 

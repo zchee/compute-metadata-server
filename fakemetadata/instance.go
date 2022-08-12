@@ -23,6 +23,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/api/impersonate"
+	"google.golang.org/api/option"
 	iamcredentialspb "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
 
@@ -30,8 +31,10 @@ import (
 //
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
 type InstanceHandler struct {
-	federateServiceAccount    string
-	impersonateServiceAccount string
+	useImpersonate bool
+	useFederate    bool
+
+	delegates []string // sequence of service accounts in a delegation chain
 }
 
 // RegisterHandlers registers instance handlers to mux.
@@ -570,30 +573,39 @@ func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWrit
 	var idTokenSource oauth2.TokenSource
 
 	switch {
-	case h.impersonateServiceAccount != "":
-		ts, err := impersonate.IDTokenSource(r.Context(), impersonate.IDTokenConfig{
-			TargetPrincipal: h.impersonateServiceAccount,
+	case h.useImpersonate:
+		idTokenCfg := impersonate.IDTokenConfig{
+			TargetPrincipal: sa,
 			Audience:        targetAudience,
 			IncludeEmail:    true,
-		})
+		}
+		if h.delegates != nil {
+			idTokenCfg.Delegates = h.delegates
+		}
+
+		ts, err := impersonate.IDTokenSource(r.Context(), idTokenCfg)
 		if err != nil {
 			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
 		}
 		idTokenSource = ts
 
-	case h.federateServiceAccount != "":
-		client, err := iamcredentials.NewIamCredentialsClient(r.Context())
+	case h.useFederate:
+		iamClient, err := iamcredentials.NewIamCredentialsClient(r.Context(), option.WithTelemetryDisabled())
 		if err != nil {
 			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
 		}
-		defer client.Close()
+		defer iamClient.Close()
 
 		req := &iamcredentialspb.GenerateIdTokenRequest{
-			Name:         fmt.Sprintf("projects/-/serviceAccounts/%s", h.federateServiceAccount),
+			Name:         fmt.Sprintf("projects/-/serviceAccounts/%s", sa),
 			Audience:     targetAudience,
 			IncludeEmail: true,
 		}
-		resp, err := client.GenerateIdToken(r.Context(), req)
+		if h.delegates != nil {
+			req.Delegates = h.delegates
+		}
+
+		resp, err := iamClient.GenerateIdToken(r.Context(), req)
 		if err != nil {
 			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
 		}
