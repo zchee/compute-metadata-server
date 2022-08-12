@@ -1,4 +1,4 @@
-// Copyright 2022 The gce-metadata-server Authors
+// Copyright 2022 The compute-metadata-server Authors
 // SPDX-License-Identifier: BSD-3-Clause
 
 package fakemetadata

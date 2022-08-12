@@ -1,4 +1,4 @@
-# gce-metadata-server project gitattributes file
+# compute-metadata-server project gitattributes file
 #  https://github.com/github/linguist/blob/master/docs/overrides.md
 
 * -text
