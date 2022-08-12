@@ -405,16 +405,19 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 		if err != nil {
 			return w.WriteError(safehttp.StatusInternalServerError)
 		}
-		queries := strings.Split(q.String("scopes", ""), ",")
+		scopes := strings.Split(q.String("scopes", ""), ",")
 
 		path := url.Path()
 		if path == "" {
 			saEndpoints := []string{
 				"default/",
 			}
-			saEmail, err := h.findServiceAccountEmail(queries...)
-			if err != nil {
-				return w.WriteError(NewStatusError(err, safehttp.StatusBadRequest))
+			saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+			if !ok {
+				saEmail, err = h.findServiceAccountEmail()
+				if err != nil {
+					return w.WriteError(NewStatusError(err, safehttp.StatusBadRequest))
+				}
 			}
 			saEndpoints = append(saEndpoints, saEmail+"/")
 
@@ -446,7 +449,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.WriteError(safehttp.StatusNotImplemented)
 
 		case "token":
-			return h.serviceAccountsTokenHandler(w, r, queries...)
+			return h.serviceAccountsTokenHandler(w, r, scopes...)
 		}
 
 		return w.WriteError(safehttp.StatusNotFound)
@@ -456,26 +459,22 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 }
 
 func (h *InstanceHandler) findServiceAccountEmail(scopes ...string) (string, error) {
-	saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+	// try to find application default credentials JSON path
+	filename, ok := os.LookupEnv(EnvGoogleApplicationCredentials)
 	if !ok {
-		// try to find application default credentials JSON path
-		filename, ok := os.LookupEnv(EnvGoogleApplicationCredentials)
-		if !ok {
-			err := fmt.Errorf("both of %q and %q environment variables is empty",
-				EnvGoogleAccountEmail,
-				EnvGoogleApplicationCredentials,
-			)
-			return "", err
-		}
-
-		jwtCfg, err := h.jwtConfigFromServiceAccount(filename, scopes...)
-		if err != nil {
-			return "", err
-		}
-		saEmail = jwtCfg.Email
+		err := fmt.Errorf("both of %q and %q environment variables is empty",
+			EnvGoogleAccountEmail,
+			EnvGoogleApplicationCredentials,
+		)
+		return "", err
 	}
 
-	return saEmail, nil
+	jwtCfg, err := h.jwtConfigFromServiceAccount(filename, scopes...)
+	if err != nil {
+		return "", err
+	}
+
+	return jwtCfg.Email, nil
 }
 
 func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes ...string) (*jwt.Config, error) {
