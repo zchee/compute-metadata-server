@@ -4,6 +4,7 @@
 package fakemetadata
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -434,9 +435,11 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.WriteError(safehttp.StatusNotImplemented)
 
 		case "identity":
-			// TODO(zchee): not implemented
-			return w.WriteError(safehttp.StatusNotImplemented)
-			_ = gsa
+			audience := q.String("audience", "")
+			if audience == "" {
+				return w.WriteError(NewStatusError(errors.New("non-empty audience parameter required"), safehttp.StatusBadRequest))
+			}
+			return h.serviceAccountsIdentityHandler(w, r, gsa, audience)
 
 		case "scopes":
 			// TODO(zchee): not implemented
@@ -492,6 +495,10 @@ func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes .
 	}
 
 	return jwtCfg, nil
+}
+
+func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa, audience string) safehttp.Result {
+	return safehttp.NotWritten()
 }
 
 // TokenResponse represents a JSON response of service account token.
