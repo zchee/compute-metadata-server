@@ -103,10 +103,15 @@ func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "enable-oslogin":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "vmdnssetting":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "ssh-keys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 
@@ -159,14 +164,23 @@ func (h *InstanceHandler) Disks() safehttp.Handler {
 			return w.Write(safehtml.HTMLEscaped(strings.Join(diskEndpoint, "\n")))
 		case "device-name":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "index":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "interface":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "mode":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "type":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
 		}
 
 		return w.WriteError(safehttp.StatusNotFound)
@@ -215,8 +229,10 @@ func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "guestInventory":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			case "hostkeys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 

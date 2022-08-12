@@ -114,22 +114,35 @@ func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "disable-legacy-endpoints":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-guest-attributes":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-os-inventory":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-oslogin":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "google-compute-default-region":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "google-compute-default-zone":
 				if zone, ok := os.LookupEnv(EnvGoogleProjectDefaultZone); ok {
 					return w.Write(safehtml.HTMLEscaped(zone))
 				}
 			case "ssh-keys", "sshKeys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "vmdnssetting":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 
