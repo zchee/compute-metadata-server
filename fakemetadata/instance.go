@@ -426,7 +426,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.Write(safehtml.HTMLEscaped(strings.Join(saEndpoints, "\n")))
 		}
 
-		gsa, attr := pathpkg.Split(path)
+		sa, attr := pathpkg.Split(path)
 		switch attr {
 		case "":
 			return w.Write(safehtml.HTMLEscaped(strings.Join(serviceAccountsEndpoints, "\n")))
@@ -435,14 +435,14 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.Write(safehtml.HTMLEscaped("default"))
 
 		case "email":
-			return h.serviceAccountsEmailHandler(w, r, gsa)
+			return h.serviceAccountsEmailHandler(w, r, sa)
 
 		case "identity":
 			audience := q.String("audience", "")
 			if audience == "" {
 				return w.WriteError(NewStatusError(errors.New("non-empty audience parameter required"), safehttp.StatusBadRequest))
 			}
-			return h.serviceAccountsIdentityHandler(w, r, gsa, audience)
+			return h.serviceAccountsIdentityHandler(w, r, sa, audience)
 
 		case "scopes":
 			const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
@@ -517,7 +517,7 @@ func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes .
 	return jwtCfg, nil
 }
 
-func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa, audience string) safehttp.Result {
+func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, audience string) safehttp.Result {
 	return safehttp.NotWritten()
 }
 
