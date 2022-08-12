@@ -18,6 +18,7 @@ import (
 	cpuid "github.com/klauspost/cpuid/v2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
+	"google.golang.org/api/idtoken"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -477,6 +478,25 @@ func (h *InstanceHandler) findServiceAccountEmail(scopes ...string) (string, err
 	return jwtCfg.Email, nil
 }
 
+func (h *InstanceHandler) jwtConfigFromServiceAccount(filename string, scopes ...string) (*jwt.Config, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = fs.ErrNotExist // overwrite underlying error to fs.ErrNotExist
+			return nil, fmt.Errorf("%s %w", filename, err)
+		}
+
+		return nil, fmt.Errorf("could not read %s file: %w", filename, err)
+	}
+
+	jwtCfg, err := google.JWTConfigFromJSON(data, scopes...)
+	if err != nil {
+		return nil, fmt.Errorf("could not get jwt configuration: %w", err)
+	}
+
+	return jwtCfg, nil
+}
+
 func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa string) safehttp.Result {
 	gsaEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
 	if ok {
@@ -498,27 +518,23 @@ func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter,
 	return w.Write(safehtml.HTMLEscaped(gsa))
 }
 
-func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes ...string) (*jwt.Config, error) {
-	data, err := os.ReadFile(filenname)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = fs.ErrNotExist // overwrite underlying error to fs.ErrNotExist
-			return nil, fmt.Errorf("%s %w", filenname, err)
-		}
-
-		return nil, fmt.Errorf("could not read %s file: %w", filenname, err)
-	}
-
-	jwtCfg, err := google.JWTConfigFromJSON(data, scopes...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get jwt configuration: %w", err)
-	}
-
-	return jwtCfg, nil
-}
-
 func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, audience string) safehttp.Result {
-	return safehttp.NotWritten()
+	creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{})
+	if err != nil {
+		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	idtok, err := idtoken.NewTokenSource(r.Context(), audience, idtoken.WithCredentialsJSON(creds.JSON))
+	if err != nil {
+		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	tok, err := idtok.Token()
+	if err != nil {
+		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	return w.Write(safehtml.HTMLEscaped(tok.AccessToken))
 }
 
 // TokenResponse represents a JSON response of service account token.
