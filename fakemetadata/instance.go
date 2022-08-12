@@ -432,7 +432,6 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 		if err != nil {
 			return w.WriteError(safehttp.StatusInternalServerError)
 		}
-		scopes := strings.Split(q.String("scopes", ""), ",")
 
 		path := url.Path()
 		if path == "" {
@@ -473,6 +472,8 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return h.serviceAccountsScopesHandler(w, r)
 
 		case "token":
+			scopes := strings.Split(q.String("scopes", ""), ",")
+
 			return h.serviceAccountsTokenHandler(w, r, scopes...)
 		}
 
