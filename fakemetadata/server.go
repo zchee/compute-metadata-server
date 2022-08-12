@@ -29,7 +29,20 @@ type Server struct {
 
 // NewServer returns the new fake metadata server.
 func NewServer() *Server {
-	addr := net.JoinHostPort("localhost", randomPort("tcp4"))
+	return newServer(randomPort("tcp4"))
+}
+
+// NewServer returns the new fake metadata server.
+func NewServerWithPort(port string) *Server {
+	return newServer(port)
+}
+
+// newServer returns the new fake metadata server.
+func newServer(port string) *Server {
+	if port == "" {
+		port = randomPort("tcp4")
+	}
+	addr := net.JoinHostPort("localhost", port)
 
 	// inject MetadataHostEnv host
 	os.Setenv(MetadataHostEnv, addr)
