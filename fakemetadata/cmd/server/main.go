@@ -43,6 +43,7 @@ func main() {
 		// nothing to do, initiate a graceful shutdown of the server
 	}
 
+	close(errc)
 	cancel()
 	if err := srv.Shutdown(context.Background()); err != nil {
 		fmt.Fprintln(os.Stderr, err)
