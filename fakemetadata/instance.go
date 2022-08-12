@@ -513,25 +513,25 @@ func (h *InstanceHandler) jwtConfigFromServiceAccount(filename string, scopes ..
 	return jwtCfg, nil
 }
 
-func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa string) safehttp.Result {
-	gsaEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa string) safehttp.Result {
+	saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
 	if ok {
-		return w.Write(safehtml.HTMLEscaped(gsaEmail))
+		return w.Write(safehtml.HTMLEscaped(saEmail))
 	}
 
-	switch gsa {
+	switch sa {
 	case "":
 		return w.WriteError(safehttp.StatusNotFound)
 
 	case "default":
 		var err error
-		gsa, err = h.findServiceAccountEmail()
+		sa, err = h.findServiceAccountEmail()
 		if err != nil {
 			return w.WriteError(safehttp.StatusNotFound)
 		}
 	}
 
-	return w.Write(safehtml.HTMLEscaped(gsa))
+	return w.Write(safehtml.HTMLEscaped(sa))
 }
 
 func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, audience string) safehttp.Result {
