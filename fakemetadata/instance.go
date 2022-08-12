@@ -413,7 +413,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			}
 			saEmail, err := h.findServiceAccountEmail(queries...)
 			if err != nil {
-				return w.Write(NewStatusError(err, safehttp.StatusBadRequest))
+				return w.WriteError(NewStatusError(err, safehttp.StatusBadRequest))
 			}
 			saEndpoints = append(saEndpoints, saEmail+"/")
 
@@ -530,7 +530,7 @@ func (h *InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter,
 		TokenType:   tok.TokenType,
 	}
 
-	return safehttp.WriteJSON(w, &resp)
+	return WriteJSON(w, &resp)
 }
 
 // Tags lists any network tags associated with the VM.

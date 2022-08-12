@@ -1,5 +1,7 @@
 cloud.google.com/go/compute v1.8.0 h1:NLtR56/eKx9K1s2Tw/4hec2vsU1S3WeKRMj8HXbBo6E=
 cloud.google.com/go/compute v1.8.0/go.mod h1:boQ44qJsMqZjKzzsEkoJWQGj4h8ygmyk17UArClWzmg=
+github.com/goccy/go-json v0.9.10 h1:hCeNmprSNLB8B8vQKWl6DpuH0t60oEs+TAk9a7CScKc=
+github.com/goccy/go-json v0.9.10/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.2 h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=

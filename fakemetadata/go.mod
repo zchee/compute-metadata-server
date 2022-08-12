@@ -5,6 +5,7 @@ go 1.18
 replace cloud.google.com/go/compute => cloud.google.com/go/compute v1.8.0
 
 require (
+	github.com/goccy/go-json v0.9.10
 	github.com/google/go-safeweb v0.0.0-20220125171915-eb79df54b8bc
 	github.com/google/safehtml v0.0.3-0.20220430015336-00016cfeca15
 	github.com/klauspost/cpuid/v2 v2.1.1-0.20220725114759-b27ab7bf7451

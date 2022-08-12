@@ -4,6 +4,8 @@
 package fakemetadata
 
 import (
+	"net/http"
+
 	"github.com/google/go-safeweb/safehttp"
 )
 
@@ -23,12 +25,13 @@ func NewStatusError(err error, status safehttp.StatusCode) StatusError {
 	}
 }
 
-// Error returns a string representation of the saErrorResponse.
-func (e StatusError) Error() string {
-	return e.err.Error()
-}
-
 // Code implements safehttp.ErrorResponse.Code.
 func (e StatusError) Code() safehttp.StatusCode {
 	return e.status
+}
+
+// Error implements safehttp.Dispatcher.Error.
+func (e StatusError) Error(w http.ResponseWriter, resp safehttp.ErrorResponse) error {
+	http.Error(w, e.err.Error(), int(e.Code()))
+	return nil
 }
