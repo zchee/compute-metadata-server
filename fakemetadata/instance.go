@@ -483,10 +483,6 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 	return safehttp.StripPrefix("/computeMetadata/v1/instance/service-accounts/", handler)
 }
 
-func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-	return w.Write(safehtml.HTMLEscaped("default"))
-}
-
 func (h InstanceHandler) findServiceAccountEmail(scopes ...string) (string, error) {
 	// try to find application default credentials JSON path
 	filename, ok := os.LookupEnv(EnvGoogleApplicationCredentials)
@@ -523,6 +519,10 @@ func (h InstanceHandler) jwtConfigFromServiceAccount(filename string, scopes ...
 	}
 
 	return jwtCfg, nil
+}
+
+func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	return w.Write(safehtml.HTMLEscaped("default"))
 }
 
 func (h InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa string) safehttp.Result {
