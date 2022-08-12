@@ -254,6 +254,33 @@ func StartServer() {
 	atomic.StorePointer(&server, unsafe.Pointer(srv))
 }
 
+// EnableImpersonate enable impersonate service account.
+func EnableImpersonate() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useImpersonate = true
+}
+
+// DisableImpersonate disable impersonate service account.
+func DisableImpersonate() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useImpersonate = false
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = nil
+}
+
+// EnableWorkloadIdentityFederation enable Workload Identity Federation ADC.
+func EnableWorkloadIdentityFederation() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useFederate = true
+}
+
+// DisableWorkloadIdentityFederation disable Workload Identity Federation ADC.
+func DisableWorkloadIdentityFederation() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useFederate = false
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = nil
+}
+
+// SetDelegateServiceAccount sets sequence of service accounts in a delegation chain.
+func SetDelegateServiceAccount(delegates []string) {
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = delegates
+}
+
 // IsRunning reports whether the fake metadata server running.
 func IsRunning() bool {
 	return atomic.LoadPointer(&server) != nil
