@@ -31,7 +31,7 @@ func (metadataFlavorInterceptor) Before(w safehttp.ResponseWriter, r *safehttp.I
 }
 
 // Commit claims and sets the following headers:
-//  - Metadata-Flavor: Google
+//   - Metadata-Flavor: Google
 func (metadataFlavorInterceptor) Commit(w safehttp.ResponseHeadersWriter, r *safehttp.IncomingRequest, _ safehttp.Response, _ safehttp.InterceptorConfig) {
 	h := w.Header()
 	setMetadataFlavor := h.Claim(MetadataFlavorHeader)
@@ -53,7 +53,7 @@ type serverInterceptor struct{}
 var _ safehttp.Interceptor = serverInterceptor{}
 
 // Before claims and sets the following headers:
-//  - Server: Metadata Server for VM
+//   - Server: Metadata Server for VM
 func (serverInterceptor) Before(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, _ safehttp.InterceptorConfig) safehttp.Result {
 	setServer := w.Header().Claim(ServerHeader)
 	setServer([]string{ServerValue})
@@ -86,8 +86,8 @@ type staticHeadersInterceptor struct{}
 var _ safehttp.Interceptor = staticHeadersInterceptor{}
 
 // Before claims and sets the following headers:
-//  - X-XSS-Protection: 0
-//  - X-Frame-Options: SAMEORIGIN
+//   - X-XSS-Protection: 0
+//   - X-Frame-Options: SAMEORIGIN
 func (staticHeadersInterceptor) Before(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, _ safehttp.InterceptorConfig) safehttp.Result {
 	h := w.Header()
 	setXXP := h.Claim(XXSSProtectionHeader)
