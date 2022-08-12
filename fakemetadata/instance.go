@@ -436,19 +436,19 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 
 		path := url.Path()
 		if path == "" {
-			saEndpoints := []string{
+			sas := []string{
 				"default/",
 			}
-			saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+			sa, ok := os.LookupEnv(EnvGoogleAccountEmail)
 			if !ok {
-				saEmail, err = h.findServiceAccountEmail()
+				sa, err = h.findServiceAccountEmail()
 				if err != nil {
 					return w.WriteError(NewStatusError(err, safehttp.StatusBadRequest))
 				}
 			}
-			saEndpoints = append(saEndpoints, saEmail+"/")
+			sas = append(sas, sa+"/")
 
-			return w.Write(safehtml.HTMLEscaped(strings.Join(saEndpoints, "\n")))
+			return w.Write(safehtml.HTMLEscaped(strings.Join(sas, "\n")))
 		}
 
 		sa, attr := pathpkg.Split(path)
@@ -457,7 +457,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.Write(safehtml.HTMLEscaped(strings.Join(serviceAccountsEndpoints, "\n")))
 
 		case "aliases":
-			return w.Write(safehtml.HTMLEscaped("default"))
+			return h.serviceAccountsAliasesHandler(w, r)
 
 		case "email":
 			return h.serviceAccountsEmailHandler(w, r, sa)
@@ -470,8 +470,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return h.serviceAccountsIdentityHandler(w, r, sa, audience)
 
 		case "scopes":
-			const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
-			return w.Write(safehtml.HTMLEscaped(cloudPlatformScope))
+			return h.serviceAccountsScopesHandler(w, r)
 
 		case "token":
 			return h.serviceAccountsTokenHandler(w, r, scopes...)
@@ -481,6 +480,10 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 	})
 
 	return safehttp.StripPrefix("/computeMetadata/v1/instance/service-accounts/", handler)
+}
+
+func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	return w.Write(safehtml.HTMLEscaped("default"))
 }
 
 func (h InstanceHandler) findServiceAccountEmail(scopes ...string) (string, error) {
@@ -596,6 +599,12 @@ func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWrit
 	}
 
 	return w.Write(safehtml.HTMLEscaped(tok.AccessToken))
+}
+
+func (h InstanceHandler) serviceAccountsScopesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
+	return w.Write(safehtml.HTMLEscaped(cloudPlatformScope))
 }
 
 // TokenResponse represents a JSON response of service account token.
