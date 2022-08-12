@@ -24,7 +24,10 @@ import (
 // InstanceHandler holds instance metadata handlers.
 //
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
-type InstanceHandler struct{}
+type InstanceHandler struct {
+	federateServiceAccount    string
+	impersonateServiceAccount string
+}
 
 // RegisterHandlers registers instance handlers to mux.
 func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
@@ -230,6 +233,7 @@ func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 			case "guestInventory":
 				// TODO(zchee): not implemented
 				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "hostkeys":
 				// TODO(zchee): not implemented
 				return w.WriteError(safehttp.StatusNotImplemented)

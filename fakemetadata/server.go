@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -25,6 +26,10 @@ import (
 // Server represents a fake metadata server.
 type Server struct {
 	srv *safehttp.Server
+
+	mu       sync.Mutex // guard of below fields
+	project  *ProjectHandler
+	instance *InstanceHandler
 }
 
 // NewServer returns the new fake metadata server.
@@ -58,15 +63,19 @@ func newServer(port string) *Server {
 	mux.Handle("/computeMetadata/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
-	(&ProjectHandler{}).RegisterHandlers(mux)
-	(&InstanceHandler{}).RegisterHandlers(mux)
 
-	return &Server{
+	s := &Server{
 		srv: &safehttp.Server{
 			Addr: addr,
 			Mux:  mux,
 		},
+		project:  &ProjectHandler{},
+		instance: &InstanceHandler{},
 	}
+	s.instance.RegisterHandlers(s.srv.Mux)
+	s.project.RegisterHandlers(s.srv.Mux)
+
+	return s
 }
 
 var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
@@ -177,6 +186,34 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	}
 
 	return s.srv.ServeTLS(l, certFile, keyFile)
+}
+
+// EnableImpersonate enable impersonate service account to sa.
+func (s *Server) EnableImpersonate(sa string) {
+	s.mu.Lock()
+	s.instance.impersonateServiceAccount = sa
+	s.mu.Unlock()
+}
+
+// DisableImpersonate disable impersonate service account.
+func (s *Server) DisableImpersonate() {
+	s.mu.Lock()
+	s.instance.impersonateServiceAccount = ""
+	s.mu.Unlock()
+}
+
+// EnableWorkloadIdentityFederation enable Workload Identity Federation ADC.
+func (s *Server) EnableWorkloadIdentityFederation(sa string) {
+	s.mu.Lock()
+	s.instance.federateServiceAccount = sa
+	s.mu.Unlock()
+}
+
+// DisableWorkloadIdentityFederation disable Workload Identity Federation ADC.
+func (s *Server) DisableWorkloadIdentityFederation() {
+	s.mu.Lock()
+	s.instance.federateServiceAccount = ""
+	s.mu.Unlock()
 }
 
 // Shutdown is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Shutdown
