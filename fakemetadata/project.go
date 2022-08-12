@@ -89,6 +89,7 @@ var ProjectAttributeMap = map[string]bool{
 	"vmdnssetting": true,
 }
 
+// EnvGoogleProjectDefaultZone environment variable name for overrides default zone.
 const EnvGoogleProjectDefaultZone = "GOOGLE_PROJECT_DEFAULT_ZONE"
 
 // Attributes a directory of custom metadata values passed to the VMs in your project during startup or shutdown.
@@ -139,9 +140,14 @@ func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
 }
 
 const (
+	// EnvGoogleCloudNumericProject one of environment variable name for overrides numeric project id.
 	EnvGoogleCloudNumericProject = "GOOGLE_CLOUD_NUMERIC_PROJECT"
-	EnvGCPNumericProject         = "GCP_NUMERIC_PROJECT"
-	EnvGoogleGCPNumericProject   = "GOOGLE_GCP_NUMERIC_PROJECT"
+
+	// EnvGCPNumericProject one of environment variable name for overrides numeric project id.
+	EnvGCPNumericProject = "GCP_NUMERIC_PROJECT"
+
+	// EnvGoogleGCPNumericProject one of environment variable name for overrides numeric project id.
+	EnvGoogleGCPNumericProject = "GOOGLE_GCP_NUMERIC_PROJECT"
 )
 
 var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumericProject, EnvGoogleGCPNumericProject}
@@ -161,9 +167,14 @@ func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
 }
 
 const (
+	// EnvGoogleCloudProject one of environment variable name for overrides project id.
 	EnvGoogleCloudProject = "GOOGLE_CLOUD_PROJECT"
-	EnvGCPProject         = "GCP_PROJECT"
-	EnvGoogleGCPProject   = "GOOGLE_GCP_PROJECT"
+
+	// EnvGCPProject one of environment variable name for overrides project id.
+	EnvGCPProject = "GCP_PROJECT"
+
+	// EnvGoogleGCPProject one of environment variable name for overrides project id.
+	EnvGoogleGCPProject = "GOOGLE_GCP_PROJECT"
 )
 
 var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
