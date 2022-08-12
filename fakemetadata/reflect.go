@@ -1,3 +1,6 @@
+// Copyright 2022 The compute-metadata-server Authors
+// SPDX-License-Identifier: BSD-3-Clause
+
 package fakemetadata
 
 import (
