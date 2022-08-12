@@ -434,8 +434,7 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 			return w.WriteError(safehttp.StatusNotImplemented)
 
 		case "email":
-			// TODO(zchee): not implemented
-			return w.WriteError(safehttp.StatusNotImplemented)
+			return h.serviceAccountsEmailHandler(w, r, gsa)
 
 		case "identity":
 			audience := q.String("audience", "")
@@ -475,6 +474,27 @@ func (h *InstanceHandler) findServiceAccountEmail(scopes ...string) (string, err
 	}
 
 	return jwtCfg.Email, nil
+}
+
+func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa string) safehttp.Result {
+	gsaEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+	if ok {
+		return w.Write(safehtml.HTMLEscaped(gsaEmail))
+	}
+
+	switch gsa {
+	case "":
+		return w.WriteError(safehttp.StatusNotFound)
+
+	case "default":
+		var err error
+		gsa, err = h.findServiceAccountEmail()
+		if err != nil {
+			return w.WriteError(safehttp.StatusNotFound)
+		}
+	}
+
+	return w.Write(safehtml.HTMLEscaped(gsa))
 }
 
 func (h *InstanceHandler) jwtConfigFromServiceAccount(filenname string, scopes ...string) (*jwt.Config, error) {
