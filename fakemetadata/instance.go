@@ -436,13 +436,14 @@ func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
 		case "identity":
 			// TODO(zchee): not implemented
 			return w.WriteError(safehttp.StatusNotImplemented)
+			_ = gsa
 
 		case "scopes":
 			// TODO(zchee): not implemented
 			return w.WriteError(safehttp.StatusNotImplemented)
 
 		case "token":
-			return h.serviceAccountsTokenHandler(w, r, gsa, queries...)
+			return h.serviceAccountsTokenHandler(w, r, queries...)
 		}
 
 		return w.WriteError(safehttp.StatusNotFound)
@@ -500,16 +501,8 @@ type TokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-func (h *InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, gsa string, scopes ...string) safehttp.Result {
+func (h *InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, scopes ...string) safehttp.Result {
 	now := time.Now().In(time.UTC) // for calculate tokne expires
-
-	if gsa == "default" {
-		var err error
-		gsa, err = h.findServiceAccountEmail()
-		if err != nil {
-			return w.Write(NewStatusError(err, safehttp.StatusInternalServerError))
-		}
-	}
 
 	creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{
 		Scopes: scopes,
