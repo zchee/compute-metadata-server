@@ -13,12 +13,16 @@ import (
 	"time"
 	"unsafe"
 
+	iamcredentials "cloud.google.com/go/iam/credentials/apiv1"
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/safehtml"
 	cpuid "github.com/klauspost/cpuid/v2"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/idtoken"
+	"google.golang.org/api/impersonate"
+	iamcredentialspb "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -538,18 +542,55 @@ func (h *InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter,
 	return w.Write(safehtml.HTMLEscaped(sa))
 }
 
-func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, audience string) safehttp.Result {
-	creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{})
-	if err != nil {
-		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, targetAudience string) safehttp.Result {
+	var idTokenSource oauth2.TokenSource
+
+	switch {
+	case h.impersonateServiceAccount != "":
+		ts, err := impersonate.IDTokenSource(r.Context(), impersonate.IDTokenConfig{
+			TargetPrincipal: h.impersonateServiceAccount,
+			Audience:        targetAudience,
+			IncludeEmail:    true,
+		})
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+		idTokenSource = ts
+
+	case h.federateServiceAccount != "":
+		client, err := iamcredentials.NewIamCredentialsClient(r.Context())
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+		defer client.Close()
+
+		req := &iamcredentialspb.GenerateIdTokenRequest{
+			Name:         fmt.Sprintf("projects/-/serviceAccounts/%s", h.federateServiceAccount),
+			Audience:     targetAudience,
+			IncludeEmail: true,
+		}
+		resp, err := client.GenerateIdToken(r.Context(), req)
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+
+		idTokenSource = oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: resp.Token,
+		})
+
+	default:
+		creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{})
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+
+		idTokenSource, err = idtoken.NewTokenSource(r.Context(), targetAudience, idtoken.WithCredentialsJSON(creds.JSON))
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
 	}
 
-	idtok, err := idtoken.NewTokenSource(r.Context(), audience, idtoken.WithCredentialsJSON(creds.JSON))
-	if err != nil {
-		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
-	}
-
-	tok, err := idtok.Token()
+	tok, err := idTokenSource.Token()
 	if err != nil {
 		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
 	}
