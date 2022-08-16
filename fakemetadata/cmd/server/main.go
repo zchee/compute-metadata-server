@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,22 +14,39 @@ import (
 	"github.com/zchee/compute-metadata-server/fakemetadata"
 )
 
+var flagPort string
+
 func main() {
+	flag.StringVar(&flagPort, "port", "", "server port")
+	flag.Parse()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGTERM, unix.SIGINT)
 	defer cancel()
 
-	srv := fakemetadata.NewServer()
+	srv := fakemetadata.NewServerWithPort(flagPort)
+	errc := make(chan error, 1)
 	go func() {
 		err := srv.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			errc <- err
 		}
 	}()
 
 	fmt.Printf("MetadataHostEnv: %s\n", os.Getenv(fakemetadata.MetadataHostEnv))
-	<-ctx.Done()
+	select {
+	case err := <-errc:
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	case <-ctx.Done():
+		// nothing to do, initiate a graceful shutdown of the server
+	}
 
+	close(errc)
+	cancel()
 	if err := srv.Shutdown(context.Background()); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }

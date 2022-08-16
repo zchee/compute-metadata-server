@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -25,16 +26,33 @@ import (
 // Server represents a fake metadata server.
 type Server struct {
 	srv *safehttp.Server
+
+	mu       sync.Mutex // guard of below fields
+	project  *ProjectHandler
+	instance *InstanceHandler
 }
 
 // NewServer returns the new fake metadata server.
 func NewServer() *Server {
-	addr := net.JoinHostPort("localhost", randomPort("tcp4"))
+	return newServer(randomPort("tcp4"))
+}
+
+// NewServer returns the new fake metadata server.
+func NewServerWithPort(port string) *Server {
+	return newServer(port)
+}
+
+// newServer returns the new fake metadata server.
+func newServer(port string) *Server {
+	if port == "" {
+		port = randomPort("tcp4")
+	}
+	addr := net.JoinHostPort("localhost", port)
 
 	// inject MetadataHostEnv host
 	os.Setenv(MetadataHostEnv, addr)
 
-	muxConfig := safehttp.NewServeMuxConfig(safehttp.DefaultDispatcher{})
+	muxConfig := safehttp.NewServeMuxConfig(Dispatcher{})
 	muxConfig.Intercept(metadataFlavorInterceptor{})
 	muxConfig.Intercept(serverInterceptor{})
 	muxConfig.Intercept(staticHeadersInterceptor{})
@@ -45,15 +63,19 @@ func NewServer() *Server {
 	mux.Handle("/computeMetadata/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
 	mux.Handle("/computeMetadata/v1/", safehttp.MethodGet, safehttp.HandlerFunc(rootHandler))
-	(&ProjectHandler{}).RegisterHandlers(mux)
-	(&InstanceHandler{}).RegisterHandlers(mux)
 
-	return &Server{
+	s := &Server{
 		srv: &safehttp.Server{
 			Addr: addr,
 			Mux:  mux,
 		},
+		project:  &ProjectHandler{},
+		instance: &InstanceHandler{},
 	}
+	s.instance.RegisterHandlers(s.srv.Mux)
+	s.project.RegisterHandlers(s.srv.Mux)
+
+	return s
 }
 
 var portRandSrc = rand.NewSource(time.Now().UTC().UnixNano())
@@ -166,6 +188,43 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	return s.srv.ServeTLS(l, certFile, keyFile)
 }
 
+// EnableImpersonate enable impersonate service account.
+func (s *Server) EnableImpersonate() {
+	s.mu.Lock()
+	s.instance.useImpersonate = true
+	s.mu.Unlock()
+}
+
+// DisableImpersonate disable impersonate service account.
+func (s *Server) DisableImpersonate() {
+	s.mu.Lock()
+	s.instance.useImpersonate = false
+	s.instance.delegates = nil
+	s.mu.Unlock()
+}
+
+// EnableWorkloadIdentityFederation enable Workload Identity Federation ADC.
+func (s *Server) EnableWorkloadIdentityFederation() {
+	s.mu.Lock()
+	s.instance.useFederate = true
+	s.mu.Unlock()
+}
+
+// DisableWorkloadIdentityFederation disable Workload Identity Federation ADC.
+func (s *Server) DisableWorkloadIdentityFederation() {
+	s.mu.Lock()
+	s.instance.useFederate = false
+	s.instance.delegates = nil
+	s.mu.Unlock()
+}
+
+// SetDelegateServiceAccount sets sequence of service accounts in a delegation chain.
+func (s *Server) SetDelegateServiceAccount(delegates []string) {
+	s.mu.Lock()
+	s.instance.delegates = delegates
+	s.mu.Unlock()
+}
+
 // Shutdown is a wrapper for https://pkg.go.dev/pkg/net/http/#Server.Shutdown
 func (s *Server) Shutdown(ctx context.Context) error {
 	defer os.Unsetenv(MetadataHostEnv)
@@ -193,6 +252,33 @@ func StartServer() {
 	}()
 
 	atomic.StorePointer(&server, unsafe.Pointer(srv))
+}
+
+// EnableImpersonate enable impersonate service account.
+func EnableImpersonate() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useImpersonate = true
+}
+
+// DisableImpersonate disable impersonate service account.
+func DisableImpersonate() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useImpersonate = false
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = nil
+}
+
+// EnableWorkloadIdentityFederation enable Workload Identity Federation ADC.
+func EnableWorkloadIdentityFederation() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useFederate = true
+}
+
+// DisableWorkloadIdentityFederation disable Workload Identity Federation ADC.
+func DisableWorkloadIdentityFederation() {
+	(*Server)(atomic.LoadPointer(&server)).instance.useFederate = false
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = nil
+}
+
+// SetDelegateServiceAccount sets sequence of service accounts in a delegation chain.
+func SetDelegateServiceAccount(delegates []string) {
+	(*Server)(atomic.LoadPointer(&server)).instance.delegates = delegates
 }
 
 // IsRunning reports whether the fake metadata server running.

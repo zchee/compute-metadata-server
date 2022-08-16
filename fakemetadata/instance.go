@@ -4,18 +4,38 @@
 package fakemetadata
 
 import (
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
+	pathpkg "path"
+	"regexp"
 	"strings"
+	"time"
+	"unsafe"
 
+	iamcredentials "cloud.google.com/go/iam/credentials/apiv1"
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/safehtml"
 	cpuid "github.com/klauspost/cpuid/v2"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/jwt"
+	"google.golang.org/api/idtoken"
+	"google.golang.org/api/impersonate"
+	"google.golang.org/api/option"
+	iamcredentialspb "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
 
 // InstanceHandler holds instance metadata handlers.
 //
 // See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
-type InstanceHandler struct{}
+type InstanceHandler struct {
+	useImpersonate bool
+	useFederate    bool
+
+	delegates []string // sequence of service accounts in a delegation chain
+}
 
 // RegisterHandlers registers instance handlers to mux.
 func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
@@ -78,7 +98,7 @@ var InstanceAttributeMap = map[string]bool{
 // For a list of instance-level Google Cloud attributes that you can set, see Instance attributes.
 //
 // For more information about setting custom metadata, see Setting custom metadata.
-func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
+func (InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if r.URL().Path() == "" {
 			attrs := make([]string, len(m))
@@ -94,10 +114,15 @@ func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "enable-oslogin":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "vmdnssetting":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "ssh-keys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 
@@ -110,14 +135,14 @@ func (h *InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 // CPUPlatform CPU platform of the VM.
 //
 // For information about CPU platforms, see CPU platforms.
-func (h *InstanceHandler) CPUPlatform() safehttp.Handler {
+func (InstanceHandler) CPUPlatform() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return w.Write(safehtml.HTMLEscaped(detectCPUMicroarchitecture(cpuid.CPU).String()))
 	})
 }
 
 // Description is the free-text description of an instance that is assigned using the "--description" flag by using the Google Cloud CLI or the API.
-func (h *InstanceHandler) Description() safehttp.Handler {
+func (InstanceHandler) Description() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		// TODO(zchee): not implemented
 		return safehttp.NotWritten()
@@ -143,21 +168,30 @@ var diskEndpoint = []string{
 //	type
 //
 // For more information about disks, see Storage options.
-func (h *InstanceHandler) Disks() safehttp.Handler {
+func (InstanceHandler) Disks() safehttp.Handler {
 	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		switch r.URL().Path() {
 		case "":
 			return w.Write(safehtml.HTMLEscaped(strings.Join(diskEndpoint, "\n")))
 		case "device-name":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "index":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "interface":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "mode":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
+
 		case "type":
 			// TODO(zchee): not implemented
+			return w.WriteError(safehttp.StatusNotImplemented)
 		}
 
 		return w.WriteError(safehttp.StatusNotFound)
@@ -190,7 +224,7 @@ var InstanceGuestAttributeMap = map[string]bool{
 // Note: Any user or process on your VM instance can read and write to the namespaces and keys in guest-attributes metadata.
 //
 // For more information about guest attributes, see Setting and querying guest attributes.
-func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
+func (InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if r.URL().Path() == "" {
 			attrs := make([]string, len(m))
@@ -206,8 +240,11 @@ func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "guestInventory":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "hostkeys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 
@@ -217,10 +254,11 @@ func (h *InstanceHandler) GuestAttributes(m map[string]bool) safehttp.Handler {
 	return safehttp.StripPrefix("/computeMetadata/v1/instance/guest-attributes/", handler)
 }
 
+// EnvInstanceHostname environment variable name for overrides instance hostname.
 const EnvInstanceHostname = "GOOGLE_INSTANCE_HOSTNAME"
 
 // Hostname is the hostname of the VM.
-func (h *InstanceHandler) Hostname() safehttp.Handler {
+func (InstanceHandler) Hostname() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if hostname, ok := os.LookupEnv(EnvInstanceHostname); ok {
 			return w.Write(safehtml.HTMLEscaped(hostname))
@@ -230,10 +268,11 @@ func (h *InstanceHandler) Hostname() safehttp.Handler {
 	})
 }
 
+// EnvInstanceID environment variable name for overrides instance id.
 const EnvInstanceID = "GOOGLE_INSTANCE_ID"
 
 // ID the ID of the VM. This is a unique, numerical ID that is generated by Compute Engine. This is useful for identifying VMs if you don't use VM names.
-func (h *InstanceHandler) ID() safehttp.Handler {
+func (InstanceHandler) ID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if id, ok := os.LookupEnv(EnvInstanceID); ok {
 			return w.Write(safehtml.HTMLEscaped(id))
@@ -246,14 +285,14 @@ func (h *InstanceHandler) ID() safehttp.Handler {
 // Image is the operating system image used by the VM. This value has the following format:
 //
 //	projects/IMAGE_PROJECT/global/images/IMAGE_NAME
-func (h *InstanceHandler) Image() safehttp.Handler {
+func (InstanceHandler) Image() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
 // LegacyEndpointAccess stores the list of legacy endpoints. Values are 0.1 and v1beta1.
-func (h *InstanceHandler) LegacyEndpointAccess() safehttp.Handler {
+func (InstanceHandler) LegacyEndpointAccess() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
@@ -261,28 +300,28 @@ func (h *InstanceHandler) LegacyEndpointAccess() safehttp.Handler {
 
 // Licenses a list of license code IDs that are used to attach the licenses to images, snapshots, and disks.
 // directory
-func (h *InstanceHandler) Licenses() safehttp.Handler {
+func (InstanceHandler) Licenses() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
 // MachineType is the machine type for this VM. This value has the following format: projects/PROJECT_NUM/machineTypes/MACHINE_TYPE
-func (h *InstanceHandler) MachineType() safehttp.Handler {
+func (InstanceHandler) MachineType() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
 // MaintenanceEvent indicates whether a maintenance event is affecting this VM. For more information, see Live migrate.
-func (h *InstanceHandler) MaintenanceEvent() safehttp.Handler {
+func (InstanceHandler) MaintenanceEvent() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
 // Name is the name of the VM.
-func (h *InstanceHandler) Name() safehttp.Handler {
+func (InstanceHandler) Name() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
@@ -305,20 +344,20 @@ func (h *InstanceHandler) Name() safehttp.Handler {
 //	target-instance-ips
 //
 // For more information about network interfaces, see Multiple network interfaces overview.
-func (h *InstanceHandler) NetworkInterfaces() safehttp.Handler {
+func (InstanceHandler) NetworkInterfaces() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
 // Preempted a boolean value that indicates whether a VM is about to be preempted.
-func (h *InstanceHandler) Preempted() safehttp.Handler {
+func (InstanceHandler) Preempted() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
-func (h *InstanceHandler) RemainingCPUTime() safehttp.Handler {
+func (InstanceHandler) RemainingCPUTime() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
@@ -341,11 +380,39 @@ func (h *InstanceHandler) RemainingCPUTime() safehttp.Handler {
 // If this value is TRUE, the VM is preemptible. This value is set when you create a VM, and it can't be changed.
 //
 // For more information about scheduling options, see Setting instance availability policies.
-func (h *InstanceHandler) Scheduling() safehttp.Handler {
+func (InstanceHandler) Scheduling() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
+
+const (
+	// EnvGoogleApplicationCredentials environment variable name for overrides application default credentials JSON path.
+	EnvGoogleApplicationCredentials = "GOOGLE_APPLICATION_CREDENTIALS"
+
+	// EnvGoogleAccountEmail environment variable name for overrides service account email address.
+	EnvGoogleAccountEmail = "GOOGLE_ACCOUNT_EMAIL"
+)
+
+var serviceAccountsEndpoints = []string{
+	"aliases",
+	"email",
+	"identity",
+	"scopes",
+	"token",
+}
+
+var (
+	rfc5322 = "(?i)(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
+		"(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"" +
+		"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")" +
+		"@" +
+		"(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|" +
+		"\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:" +
+		"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])"
+
+	validEmailRe = regexp.MustCompile(fmt.Sprintf("^%s*$", rfc5322))
+)
 
 // ServiceAccounts a directory of service accounts associated with the VM. For each service account, the following information is available:
 //
@@ -375,21 +442,246 @@ func (h *InstanceHandler) Scheduling() safehttp.Handler {
 //
 // For more information about service accounts, see Creating and enabling service accounts for instances.
 func (h *InstanceHandler) ServiceAccounts() safehttp.Handler {
-	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
-		return safehttp.NotWritten()
+	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		url := r.URL()
+		q, err := url.Query()
+		if err != nil {
+			return w.WriteError(safehttp.StatusInternalServerError)
+		}
+
+		path := url.Path()
+		if path == "" {
+			sas := []string{
+				"default/",
+			}
+			sa, ok := os.LookupEnv(EnvGoogleAccountEmail)
+			if !ok {
+				sa, err = h.findServiceAccountEmail()
+				if err != nil {
+					return w.WriteError(NewStatusError(err, safehttp.StatusBadRequest))
+				}
+			}
+			sas = append(sas, sa+"/")
+
+			return w.Write(safehtml.HTMLEscaped(strings.Join(sas, "\n")))
+		}
+
+		sa, attr := pathpkg.Split(path)
+		switch attr {
+		case "":
+			return w.Write(safehtml.HTMLEscaped(strings.Join(serviceAccountsEndpoints, "\n")))
+
+		case "aliases":
+			return h.serviceAccountsAliasesHandler(w, r)
+
+		case "email":
+			return h.serviceAccountsEmailHandler(w, r, sa)
+
+		case "identity":
+			audience := q.String("audience", "")
+			if audience == "" {
+				return w.WriteError(NewStatusError(errors.New("non-empty audience parameter required"), safehttp.StatusBadRequest))
+			}
+
+			return h.serviceAccountsIdentityHandler(w, r, sa, audience)
+
+		case "scopes":
+			return h.serviceAccountsScopesHandler(w, r)
+
+		case "token":
+			scopes := strings.Split(q.String("scopes", ""), ",")
+
+			return h.serviceAccountsTokenHandler(w, r, scopes...)
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
 	})
+
+	return safehttp.StripPrefix("/computeMetadata/v1/instance/service-accounts/", handler)
+}
+
+func (h InstanceHandler) findServiceAccountEmail(scopes ...string) (string, error) {
+	// try to find application default credentials JSON path
+	filename, ok := os.LookupEnv(EnvGoogleApplicationCredentials)
+	if !ok {
+		err := fmt.Errorf("both of %q and %q environment variables is empty",
+			EnvGoogleAccountEmail,
+			EnvGoogleApplicationCredentials,
+		)
+		return "", err
+	}
+
+	jwtCfg, err := h.jwtConfigFromServiceAccount(filename, scopes...)
+	if err != nil {
+		return "", err
+	}
+
+	return jwtCfg.Email, nil
+}
+
+func (h InstanceHandler) jwtConfigFromServiceAccount(filename string, scopes ...string) (*jwt.Config, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = fs.ErrNotExist // overwrite underlying error to fs.ErrNotExist
+			return nil, fmt.Errorf("%s %w", filename, err)
+		}
+
+		return nil, fmt.Errorf("could not read %s file: %w", filename, err)
+	}
+
+	jwtCfg, err := google.JWTConfigFromJSON(data, scopes...)
+	if err != nil {
+		return nil, fmt.Errorf("could not get jwt configuration: %w", err)
+	}
+
+	return jwtCfg, nil
+}
+
+func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	return w.Write(safehtml.HTMLEscaped("default"))
+}
+
+func (h InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa string) safehttp.Result {
+	saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
+	if ok {
+		return w.Write(safehtml.HTMLEscaped(saEmail))
+	}
+
+	switch sa {
+	case "":
+		return w.WriteError(safehttp.StatusNotFound)
+
+	case "default":
+		var err error
+		sa, err = h.findServiceAccountEmail()
+		if err != nil {
+			return w.WriteError(safehttp.StatusNotFound)
+		}
+
+	default:
+		// validates service account email address
+		if !validEmailRe.MatchString(sa) {
+			return w.WriteError(NewStatusError(fmt.Errorf("%s email address is invalid", sa), safehttp.StatusBadRequest))
+		}
+	}
+
+	return w.Write(safehtml.HTMLEscaped(sa))
+}
+
+func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa, targetAudience string) safehttp.Result {
+	var idTokenSource oauth2.TokenSource
+
+	switch {
+	case h.useImpersonate:
+		idTokenCfg := impersonate.IDTokenConfig{
+			TargetPrincipal: sa,
+			Audience:        targetAudience,
+			IncludeEmail:    true,
+		}
+		if h.delegates != nil {
+			idTokenCfg.Delegates = h.delegates
+		}
+
+		ts, err := impersonate.IDTokenSource(r.Context(), idTokenCfg)
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+		idTokenSource = ts
+
+	case h.useFederate:
+		iamClient, err := iamcredentials.NewIamCredentialsClient(r.Context(), option.WithTelemetryDisabled())
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+		defer iamClient.Close()
+
+		req := &iamcredentialspb.GenerateIdTokenRequest{
+			Name:         fmt.Sprintf("projects/-/serviceAccounts/%s", sa),
+			Audience:     targetAudience,
+			IncludeEmail: true,
+		}
+		if h.delegates != nil {
+			req.Delegates = h.delegates
+		}
+
+		resp, err := iamClient.GenerateIdToken(r.Context(), req)
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+
+		idTokenSource = oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: resp.Token,
+		})
+
+	default:
+		creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{})
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+
+		idTokenSource, err = idtoken.NewTokenSource(r.Context(), targetAudience, idtoken.WithCredentialsJSON(creds.JSON))
+		if err != nil {
+			return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+		}
+	}
+
+	tok, err := idTokenSource.Token()
+	if err != nil {
+		return w.WriteError(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	return w.Write(safehtml.HTMLEscaped(tok.AccessToken))
+}
+
+func (h InstanceHandler) serviceAccountsScopesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+	const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
+	return w.Write(safehtml.HTMLEscaped(cloudPlatformScope))
+}
+
+// TokenResponse represents a JSON response of service account token.
+type TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+}
+
+func (InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, scopes ...string) safehttp.Result {
+	now := time.Now().In(time.UTC) // for calculate tokne expires
+
+	creds, err := google.FindDefaultCredentialsWithParams(r.Context(), google.CredentialsParams{
+		Scopes: scopes,
+	})
+	if err != nil {
+		return w.Write(NewStatusError(err, safehttp.StatusInternalServerError))
+	}
+
+	tok, err := creds.TokenSource.Token()
+	if err != nil {
+		return w.WriteError(safehttp.StatusInternalServerError)
+	}
+
+	expiresIn := tok.Expiry.In(time.UTC).Sub(now).Round(time.Second).Seconds()
+	resp := TokenResponse{
+		AccessToken: tok.AccessToken,
+		ExpiresIn:   *(*int)(unsafe.Pointer(&expiresIn)),
+		TokenType:   tok.TokenType,
+	}
+
+	return WriteJSON(w, &resp)
 }
 
 // Tags lists any network tags associated with the VM.
 //
 // For more information about network tags, see Configuring network tags.
-func (h *InstanceHandler) Tags() safehttp.Handler {
+func (InstanceHandler) Tags() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
 }
 
-func (h *InstanceHandler) VirtualClock() safehttp.Handler {
+func (InstanceHandler) VirtualClock() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})
@@ -398,7 +690,7 @@ func (h *InstanceHandler) VirtualClock() safehttp.Handler {
 // Zone is the zone where this VM is located.
 //
 // This value has the following format: projects/PROJECT_NUM/zones/ZONE.
-func (h *InstanceHandler) Zone() safehttp.Handler {
+func (InstanceHandler) Zone() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		return safehttp.NotWritten()
 	})

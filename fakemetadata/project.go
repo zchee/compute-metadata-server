@@ -21,7 +21,7 @@ import (
 type ProjectHandler struct{}
 
 // RegisterHandlers registers project handlers to mux.
-func (h *ProjectHandler) RegisterHandlers(mux *safehttp.ServeMux) {
+func (h ProjectHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 	mux.Handle("/computeMetadata/v1/project/attributes", safehttp.MethodGet, redirectHandler("computeMetadata/v1/project/attributes/"))
 	mux.Handle("/computeMetadata/v1/project/attributes/", safehttp.MethodGet, h.Attributes(ProjectAttributeMap))
 	mux.Handle("/computeMetadata/v1/project/numeric-project-id", safehttp.MethodGet, h.NumericProjectID())
@@ -98,7 +98,7 @@ const EnvGoogleProjectDefaultZone = "GOOGLE_PROJECT_DEFAULT_ZONE"
 // For a list of project-level Google Cloud attributes that you can set, see Project attributes.
 //
 // For more information about setting custom metadata, see Setting VM metadata.
-func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
+func (ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
 	handler := safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if r.URL().Path() == "" {
 			attrs := make([]string, len(m))
@@ -114,22 +114,35 @@ func (h *ProjectHandler) Attributes(m map[string]bool) safehttp.Handler {
 			switch path {
 			case "disable-legacy-endpoints":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-guest-attributes":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-os-inventory":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "enable-oslogin":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "google-compute-default-region":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "google-compute-default-zone":
 				if zone, ok := os.LookupEnv(EnvGoogleProjectDefaultZone); ok {
 					return w.Write(safehtml.HTMLEscaped(zone))
 				}
 			case "ssh-keys", "sshKeys":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
 			case "vmdnssetting":
 				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
 			}
 		}
 
@@ -154,7 +167,7 @@ var numericProjectEnvs = []string{EnvGoogleCloudNumericProject, EnvGCPNumericPro
 
 // NumericProjectID is the numeric project ID (project number) of the instance, which is not the same as the project name that is visible in the Google Cloud console.
 // This value is different from the project-id metadata entry value.
-func (h *ProjectHandler) NumericProjectID() safehttp.Handler {
+func (ProjectHandler) NumericProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		for _, env := range numericProjectEnvs {
 			if proj, ok := os.LookupEnv(env); ok {
@@ -180,7 +193,7 @@ const (
 var projectEnvs = []string{EnvGoogleCloudProject, EnvGCPProject, EnvGoogleGCPProject}
 
 // ProjectID is the project ID.
-func (h *ProjectHandler) ProjectID() safehttp.Handler {
+func (ProjectHandler) ProjectID() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		for _, env := range projectEnvs {
 			if proj, ok := os.LookupEnv(env); ok {

@@ -1,3 +1,6 @@
+// Copyright 2022 The compute-metadata-server Authors
+// SPDX-License-Identifier: BSD-3-Clause
+
 package fakemetadata
 
 import (
@@ -21,7 +24,7 @@ func toExport(v reflect.Value) reflect.Value {
 
 	ptr := unsafe.Pointer(&v)
 	fptr := (*uintptr)(unsafe.Pointer(uintptr(ptr) + offset))
-	*fptr = *fptr &^ flagRO
+	*fptr &^= flagRO
 
 	return v
 }
