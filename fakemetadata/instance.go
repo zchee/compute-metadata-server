@@ -676,23 +676,30 @@ func (InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r 
 // EnvGoogleInstanceRegion environment variable name for overrides instance region.
 const EnvGoogleInstanceRegion = "GOOGLE_INSTANCE_REGION"
 
-// Region returns a region of any GCP services.
+// Region returns a region of GCP services.
 //
 // This value has the following format:
 //
-//	projects/PROJECT_NAME/regions/REGION
+//	projects/PROJECT-NUMBER/regions/REGION
+//
+// Note that when using this function, you also need to fake the GCP project number as this package emulates the behavior of the real metadata server.
+//
+// Requires sets one of the below environment variables:
+// - GOOGLE_CLOUD_NUMERIC_PROJECT
+// - GCP_NUMERIC_PROJECT
+// - GOOGLE_GCP_NUMERIC_PROJECT
 func (InstanceHandler) Region() safehttp.Handler {
 	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
 		if region, ok := os.LookupEnv(EnvGoogleInstanceRegion); ok {
-			var projectID string
-			for _, env := range projectEnvs {
-				if proj, ok := os.LookupEnv(env); ok {
-					projectID = proj
+			var projectNumber string
+			for _, env := range numericProjectEnvs {
+				if projnum, ok := os.LookupEnv(env); ok {
+					projectNumber = projnum
 				}
 			}
 
-			if projectID != "" {
-				val := fmt.Sprintf("projects/%s/regions/%s", projectID, region)
+			if projectNumber != "" {
+				val := fmt.Sprintf("projects/%s/regions/%s", projectNumber, region)
 				return w.Write(safehtml.HTMLEscaped(val))
 			}
 		}
