@@ -63,6 +63,7 @@ func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 	mux.Handle("/computeMetadata/v1/instance/scheduling/", safehttp.MethodGet, h.Scheduling())
 	mux.Handle("/computeMetadata/v1/instance/service-accounts", safehttp.MethodGet, redirectHandler("computeMetadata/v1/instance/service-accounts/"))
 	mux.Handle("/computeMetadata/v1/instance/service-accounts/", safehttp.MethodGet, h.ServiceAccounts())
+	mux.Handle("/computeMetadata/v1/instance/region", safehttp.MethodGet, h.Region())
 	mux.Handle("/computeMetadata/v1/instance/tags", safehttp.MethodGet, h.Tags())
 	mux.Handle("/computeMetadata/v1/instance/virtual-clock", safehttp.MethodGet, redirectHandler("computeMetadata/v1/instance/virtual-clock/"))
 	mux.Handle("/computeMetadata/v1/instance/virtual-clock/", safehttp.MethodGet, h.VirtualClock())
@@ -670,6 +671,34 @@ func (InstanceHandler) serviceAccountsTokenHandler(w safehttp.ResponseWriter, r 
 	}
 
 	return WriteJSON(w, &resp)
+}
+
+// EnvGoogleInstanceRegion environment variable name for overrides instance region.
+const EnvGoogleInstanceRegion = "GOOGLE_INSTANCE_REGION"
+
+// Region returns a region of any GCP services.
+//
+// This value has the following format:
+//
+//	projects/PROJECT_NAME/regions/REGION
+func (InstanceHandler) Region() safehttp.Handler {
+	return safehttp.HandlerFunc(func(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+		if region, ok := os.LookupEnv(EnvGoogleInstanceRegion); ok {
+			var projectID string
+			for _, env := range projectEnvs {
+				if proj, ok := os.LookupEnv(env); ok {
+					projectID = proj
+				}
+			}
+
+			if projectID != "" {
+				val := fmt.Sprintf("projects/%s/regions/%s", projectID, region)
+				return w.Write(safehtml.HTMLEscaped(val))
+			}
+		}
+
+		return w.WriteError(safehttp.StatusNotFound)
+	})
 }
 
 // Tags lists any network tags associated with the VM.
