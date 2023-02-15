@@ -4,12 +4,6 @@
 // Package fakemetadata provides the fake GCE compute metadata server for testing.
 package fakemetadata
 
-import (
-	"net/url"
-	"path"
-	"strings"
-)
-
 // List of metadata server variables.
 //
 // Those are exported and don't use constant types so can be replaced.
@@ -27,19 +21,7 @@ var (
 	//
 	// So this environment variable is helpful to replace the server that the cloud.google.com/go/compute/metadata package accesses during testing.
 	MetadataHostEnv = "GCE_METADATA_HOST"
-
-	// RootURL is the documented metadata server Host.
-	RootURL = "metadata.google.internal"
-
-	// SubPath is the documented metadata sub-path.
-	SubPath = path.Join("computeMetadata", "v1")
 )
-
-var rootURL = &url.URL{
-	Scheme: "http",
-	Host:   RootURL,
-	Path:   SubPath,
-}
 
 // List of request http header constants.
 //
@@ -54,18 +36,4 @@ const (
 
 	// LegacyRequestHeader is the legacy (but still supported) required http header for access to the metadata server.
 	LegacyRequestHeader = "X-Google-Metadata-Request: True"
-)
-
-// QueryReplacer replaces string pairs for not supported in a request path to the metadata server.
-//
-// See details: https://cloud.google.com/compute/docs/metadata/overview#limitations
-var QueryReplacer = strings.NewReplacer(
-	"%21", "!",
-	"%24", "$",
-	"%27", "'",
-	"%28", "(",
-	"%29", ")",
-	"%2A", "*",
-	"%2C", ",",
-	"%40", "@",
 )
