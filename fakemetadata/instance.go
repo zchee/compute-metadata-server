@@ -15,6 +15,7 @@ import (
 	"unsafe"
 
 	iamcredentials "cloud.google.com/go/iam/credentials/apiv1"
+	"cloud.google.com/go/iam/credentials/apiv1/credentialspb"
 	"github.com/google/go-safeweb/safehttp"
 	"github.com/google/safehtml"
 	cpuid "github.com/klauspost/cpuid/v2"
@@ -24,7 +25,6 @@ import (
 	"google.golang.org/api/idtoken"
 	"google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
-	iamcredentialspb "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
 
 // InstanceHandler holds instance metadata handlers.
@@ -597,7 +597,7 @@ func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWrit
 		}
 		defer iamClient.Close()
 
-		req := &iamcredentialspb.GenerateIdTokenRequest{
+		req := &credentialspb.GenerateIdTokenRequest{
 			Name:         fmt.Sprintf("projects/-/serviceAccounts/%s", sa),
 			Audience:     targetAudience,
 			IncludeEmail: true,
