@@ -135,10 +135,9 @@ func buildStd(s *safehttp.Server) error {
 	if s.TLSConfig != nil {
 		cfg := s.TLSConfig.Clone()
 		cfg.MinVersion = tls.VersionTLS12
-		cfg.PreferServerCipherSuites = true
 		srv.TLSConfig = cfg
 	}
-	for _, f := range s.OnShudown {
+	for _, f := range s.OnShutdown {
 		srv.RegisterOnShutdown(f)
 	}
 	if s.DisableKeepAlives {
