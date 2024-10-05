@@ -539,11 +539,11 @@ func (h InstanceHandler) jwtConfigFromServiceAccount(filename string, scopes ...
 	return jwtCfg, nil
 }
 
-func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+func (h InstanceHandler) serviceAccountsAliasesHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
 	return w.Write(safehtml.HTMLEscaped("default"))
 }
 
-func (h InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest, sa string) safehttp.Result {
+func (h InstanceHandler) serviceAccountsEmailHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest, sa string) safehttp.Result {
 	saEmail, ok := os.LookupEnv(EnvGoogleAccountEmail)
 	if ok {
 		return w.Write(safehtml.HTMLEscaped(saEmail))
@@ -635,7 +635,7 @@ func (h *InstanceHandler) serviceAccountsIdentityHandler(w safehttp.ResponseWrit
 	return w.Write(safehtml.HTMLEscaped(tok.AccessToken))
 }
 
-func (h InstanceHandler) serviceAccountsScopesHandler(w safehttp.ResponseWriter, r *safehttp.IncomingRequest) safehttp.Result {
+func (h InstanceHandler) serviceAccountsScopesHandler(w safehttp.ResponseWriter, _ *safehttp.IncomingRequest) safehttp.Result {
 	const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 
 	return w.Write(safehtml.HTMLEscaped(cloudPlatformScope))
