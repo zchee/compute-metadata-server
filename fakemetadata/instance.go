@@ -72,7 +72,7 @@ func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 
 // InstanceAttributeMap map of instance attributes.
 //
-// See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#instance-attributes-metadata
+// See: https://cloud.google.com/compute/docs/metadata/predefined-metadata-keys#instance-metadata
 var InstanceAttributeMap = map[string]bool{
 	// Enables or disables SSH key management on your VM.
 	//

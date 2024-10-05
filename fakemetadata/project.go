@@ -17,7 +17,7 @@ import (
 //
 //	http://metadata.google.internal/computeMetadata/v1/project/
 //
-// See: https://cloud.google.com/compute/docs/metadata/default-metadata-values#project_metadata
+// See: https://cloud.google.com/compute/docs/metadata/predefined-metadata-keys#project-metadata
 type ProjectHandler struct{}
 
 // RegisterHandlers registers project handlers to mux.
