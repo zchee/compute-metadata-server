@@ -72,7 +72,11 @@ func (h *InstanceHandler) RegisterHandlers(mux *safehttp.ServeMux) {
 
 // InstanceAttributeMap map of instance attributes.
 //
-// See: https://cloud.google.com/compute/docs/metadata/predefined-metadata-keys#instance-metadata
+// See:
+//
+// https://cloud.google.com/compute/docs/metadata/predefined-metadata-keys#instance-metadata
+//
+// https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity#instance_attributes
 var InstanceAttributeMap = map[string]bool{
 	// Enables or disables SSH key management on your VM.
 	//
@@ -91,7 +95,24 @@ var InstanceAttributeMap = map[string]bool{
 	//
 	// SSH keys managed by OS Login aren't visible in metadata.
 	"ssh-keys": true,
+
+	// The Compute Engine zone or region of your cluster.
+	"cluster-location": true,
+
+	// The name of your GKE cluster.
+	"cluster-name": true,
+
+	// The UID of your GKE cluster.
+	"cluster-uid": true,
 }
+
+const (
+	// EnvKubernetesEngineClusterLocation environment variable name for overrides cluster-location.
+	EnvKubernetesEngineClusterLocation = "KUBERNETES_ENGINE_CLUSTER_LOCATION"
+
+	// EnvKubernetesEngineClusterName environment variable name for overrides cluster-name.
+	EnvKubernetesEngineClusterName = "KUBERNETES_ENGINE_CLUSTER_NAME"
+)
 
 // Attributes a directory of custom metadata values passed to the VM during startup or shutdown.
 // These custom values can either be Google Cloud attributes or user-created metadata values.
@@ -122,6 +143,22 @@ func (InstanceHandler) Attributes(m map[string]bool) safehttp.Handler {
 				return w.WriteError(safehttp.StatusNotImplemented)
 
 			case "ssh-keys":
+				// TODO(zchee): not implemented
+				return w.WriteError(safehttp.StatusNotImplemented)
+
+			case "cluster-location":
+				if val, ok := os.LookupEnv(EnvKubernetesEngineClusterLocation); ok {
+					return w.Write(safehtml.HTMLEscaped(val))
+				}
+				return w.WriteError(safehttp.StatusNotFound)
+
+			case "cluster-name":
+				if val, ok := os.LookupEnv(EnvKubernetesEngineClusterName); ok {
+					return w.Write(safehtml.HTMLEscaped(val))
+				}
+				return w.WriteError(safehttp.StatusNotFound)
+
+			case "cluster-uid":
 				// TODO(zchee): not implemented
 				return w.WriteError(safehttp.StatusNotImplemented)
 			}
